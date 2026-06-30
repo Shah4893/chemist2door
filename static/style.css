@@ -6,7 +6,6 @@ body {
     color: #e0f7ff;
 }
 
-/* Main container */
 .container {
     max-width: 1100px;
     margin: 20px auto;
@@ -14,16 +13,14 @@ body {
     text-align: center;
 }
 
-/* Heading fix */
 .main-title {
     font-size: 22px;
     margin-bottom: 15px;
     letter-spacing: 1px;
     text-transform: uppercase;
-    color: #0ff;              /* FIX: visible color */
+    color: #0ff; /* FIX: visible */
 }
 
-/* Desktop row layout */
 .row {
     display: flex;
     justify-content: center;
@@ -31,7 +28,6 @@ body {
     flex-wrap: wrap;
 }
 
-/* Card box */
 .card {
     flex: 1;
     max-width: 480px;
@@ -43,13 +39,11 @@ body {
     box-shadow: 0 0 20px #0ff3;
     margin-bottom: 20px;
 
-    /* Center all content inside card */
     display: flex;
     flex-direction: column;
     align-items: center;
 }
 
-/* Video, canvas, ID preview */
 video, canvas, #idPreview {
     width: 100%;
     max-height: 260px;
@@ -58,18 +52,15 @@ video, canvas, #idPreview {
     background: #000;
     object-fit: cover;
 
-    /* FIX: center selfie */
     display: block;
     margin-left: auto;
-    margin-right: auto;
+    margin-right: auto; /* FIX: center */
 }
 
-/* Hide canvas until selfie captured */
 #selfieCanvas {
     display: none;
 }
 
-/* Buttons */
 button {
     margin-top: 10px;
     padding: 12px 20px;
@@ -87,18 +78,13 @@ button:hover {
     background: #00c8ff;
 }
 
-.primary-btn {
-    font-size: 16px;
-}
-
-/* Upload box */
 .upload-box {
     border: 1px dashed #0ff8;
     border-radius: 10px;
     padding: 15px;
     margin-bottom: 10px;
     width: 100%;
-    box-sizing: border-box;   /* FIX: prevent overflow */
+    box-sizing: border-box; /* FIX: no overflow */
 }
 
 #idInput {
@@ -113,7 +99,7 @@ button:hover {
     border-radius: 6px;
     cursor: pointer;
     margin-bottom: 8px;
-    width: 100%;              /* FIX: stays inside container */
+    width: 100%; /* FIX: stays inside */
     text-align: center;
 }
 
@@ -122,7 +108,6 @@ button:hover {
     opacity: 0.8;
 }
 
-/* Result box */
 .result-box {
     margin-top: 20px;
     background: rgba(5, 15, 25, 0.95);
@@ -136,7 +121,6 @@ button:hover {
     font-weight: bold;
 }
 
-/* Mobile layout fix */
 @media (max-width: 768px) {
     .row {
         flex-direction: column;
@@ -145,11 +129,6 @@ button:hover {
 
     .main-title {
         font-size: 20px;
-    }
-
-    button {
-        font-size: 18px;
-        padding: 14px;
     }
 
     video, canvas, #idPreview {
