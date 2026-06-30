@@ -10,27 +10,22 @@ const resultText = document.getElementById("resultText");
 let selfieBase64 = "";
 let idBase64 = "";
 
-/* ---------------------------
-   FINAL CAMERA FIX (CENTER + HD)
----------------------------- */
+/* CAMERA FIX */
 async function startCamera() {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({
             video: {
-                facingMode: { ideal: "user" },
+                facingMode: "user",
                 width: { min: 640, ideal: 1280, max: 1920 },
                 height: { min: 480, ideal: 720, max: 1080 }
             }
         });
 
         video.srcObject = stream;
-
         await video.play();
-
         video.setAttribute("playsinline", true);
 
     } catch (err) {
-        console.error("Camera error:", err);
         resultText.style.color = "#ff4444";
         resultText.textContent = "Camera not accessible.";
     }
@@ -38,9 +33,7 @@ async function startCamera() {
 
 startCamera();
 
-/* ---------------------------
-   CLEAR SELFIE CAPTURE (HD)
----------------------------- */
+/* SELFIE CAPTURE */
 captureBtn.onclick = () => {
     const ctx = selfieCanvas.getContext("2d");
 
@@ -51,13 +44,10 @@ captureBtn.onclick = () => {
 
     selfieBase64 = selfieCanvas.toDataURL("image/jpeg", 1.0);
 
-    resultText.style.color = "#e0f7ff";
     resultText.textContent = "Selfie captured. Ready to verify.";
 };
 
-/* ---------------------------
-   ID UPLOAD
----------------------------- */
+/* ID UPLOAD */
 idInput.onchange = () => {
     const file = idInput.files[0];
     if (!file) return;
@@ -69,31 +59,25 @@ idInput.onchange = () => {
         idBase64 = reader.result;
         idPreview.src = reader.result;
 
-        resultText.style.color = "#e0f7ff";
         resultText.textContent = "ID loaded. Capture selfie and start verification.";
     };
 
     reader.readAsDataURL(file);
 };
 
-/* ---------------------------
-   VERIFY BUTTON
----------------------------- */
+/* VERIFY */
 verifyBtn.onclick = async () => {
 
     if (!selfieBase64) {
-        resultText.style.color = "#ff4444";
         resultText.textContent = "Please capture a selfie.";
         return;
     }
 
     if (!idBase64) {
-        resultText.style.color = "#ff4444";
         resultText.textContent = "Please upload an ID image.";
         return;
     }
 
-    resultText.style.color = "#e0f7ff";
     resultText.textContent = "Processing...";
 
     const payload = {
@@ -111,25 +95,14 @@ verifyBtn.onclick = async () => {
         const data = await res.json();
 
         if (data.status === true) {
-            resultText.style.color = "#00ff99";
             resultText.textContent = "✔ Verification Successful";
-
-            setTimeout(() => {
-                window.location.href = "/";
-            }, 2000);
-
+            setTimeout(() => window.location.href = "/", 2000);
         } else {
-            resultText.style.color = "#ff4444";
             resultText.textContent = "✘ Verification Failed";
-
-            setTimeout(() => {
-                window.location.href = "/";
-            }, 2500);
+            setTimeout(() => window.location.href = "/", 2500);
         }
 
     } catch (e) {
-        console.error(e);
-        resultText.style.color = "#ff4444";
         resultText.textContent = "Request error.";
     }
 };
