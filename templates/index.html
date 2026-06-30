@@ -3,33 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <title>Secure Identity Verification</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/static/style.css">
 </head>
+
 <body>
 <div class="container">
     <h1>Secure Identity Verification</h1>
 
     <div class="row">
+        <!-- Selfie Section -->
         <div class="card">
             <h2>Selfie</h2>
+
+            <!-- Mobile-friendly video -->
             <video id="video" autoplay playsinline></video>
+
+            <!-- Canvas for captured selfie -->
             <canvas id="selfieCanvas"></canvas>
-            <button id="captureBtn">Capture Selfie</button>
+
+            <!-- Capture button -->
+            <button id="captureBtn" class="primary-btn">Capture Selfie</button>
         </div>
 
+        <!-- ID Upload Section -->
         <div class="card">
             <h2>ID Document</h2>
+
             <div class="upload-box">
                 <input type="file" id="idInput" accept="image/*">
                 <label for="idInput" class="upload-label">Browse ID Image</label>
                 <p id="idFileName">No file selected</p>
             </div>
+
+            <!-- ID Preview -->
             <img id="idPreview" alt="ID Preview">
         </div>
     </div>
 
+    <!-- Verification Button -->
     <button id="verifyBtn" class="primary-btn">Start Verification</button>
 
+    <!-- Result Box -->
     <div id="resultBox" class="result-box">
         <p id="resultText">Waiting for verification...</p>
     </div>
