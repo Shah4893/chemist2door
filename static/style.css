@@ -14,12 +14,13 @@ body {
     text-align: center;
 }
 
-/* Smaller heading */
+/* Heading fix */
 .main-title {
     font-size: 22px;
     margin-bottom: 15px;
     letter-spacing: 1px;
     text-transform: uppercase;
+    color: #0ff;              /* FIX: visible color */
 }
 
 /* Desktop row layout */
@@ -57,7 +58,7 @@ video, canvas, #idPreview {
     background: #000;
     object-fit: cover;
 
-    /* Center video perfectly */
+    /* FIX: center selfie */
     display: block;
     margin-left: auto;
     margin-right: auto;
@@ -97,6 +98,7 @@ button:hover {
     padding: 15px;
     margin-bottom: 10px;
     width: 100%;
+    box-sizing: border-box;   /* FIX: prevent overflow */
 }
 
 #idInput {
@@ -111,7 +113,7 @@ button:hover {
     border-radius: 6px;
     cursor: pointer;
     margin-bottom: 8px;
-    width: 100%;
+    width: 100%;              /* FIX: stays inside container */
     text-align: center;
 }
 
