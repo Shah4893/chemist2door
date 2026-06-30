@@ -11,27 +11,34 @@ let selfieBase64 = "";
 let idBase64 = "";
 
 /* ---------------------------
-   MOBILE + DESKTOP CAMERA FIX
+   FINAL CAMERA FIX
 ---------------------------- */
-navigator.mediaDevices.getUserMedia({
-    video: {
-        facingMode: "user",
-        width: { ideal: 720 },
-        height: { ideal: 1280 }
+async function startCamera() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                facingMode: { ideal: "user" },
+                width: { min: 640, ideal: 1280, max: 1920 },
+                height: { min: 480, ideal: 720, max: 1080 }
+            }
+        });
+
+        video.srcObject = stream;
+        await video.play();
+
+        video.setAttribute("playsinline", true);
+
+    } catch (err) {
+        console.error("Camera error:", err);
+        resultText.style.color = "#ff4444";
+        resultText.textContent = "Camera not accessible.";
     }
-})
-.then(stream => {
-    video.srcObject = stream;
-    video.play();
-})
-.catch(err => {
-    console.error("Camera error:", err);
-    resultText.style.color = "#ff4444";
-    resultText.textContent = "Camera not accessible.";
-});
+}
+
+startCamera();
 
 /* ---------------------------
-   CAPTURE SELFIE
+   CLEAR SELFIE CAPTURE
 ---------------------------- */
 captureBtn.onclick = () => {
     const ctx = selfieCanvas.getContext("2d");
@@ -39,9 +46,9 @@ captureBtn.onclick = () => {
     selfieCanvas.width = video.videoWidth;
     selfieCanvas.height = video.videoHeight;
 
-    ctx.drawImage(video, 0, 0);
+    ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
 
-    selfieBase64 = selfieCanvas.toDataURL("image/jpeg");
+    selfieBase64 = selfieCanvas.toDataURL("image/jpeg", 1.0);
 
     resultText.style.color = "#e0f7ff";
     resultText.textContent = "Selfie captured. Ready to verify.";
