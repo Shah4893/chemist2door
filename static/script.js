@@ -11,7 +11,7 @@ let selfieBase64 = "";
 let idBase64 = "";
 
 /* ---------------------------
-   FINAL CAMERA FIX
+   FINAL CAMERA FIX (CENTER + HD)
 ---------------------------- */
 async function startCamera() {
     try {
@@ -24,6 +24,7 @@ async function startCamera() {
         });
 
         video.srcObject = stream;
+
         await video.play();
 
         video.setAttribute("playsinline", true);
@@ -38,7 +39,7 @@ async function startCamera() {
 startCamera();
 
 /* ---------------------------
-   CLEAR SELFIE CAPTURE
+   CLEAR SELFIE CAPTURE (HD)
 ---------------------------- */
 captureBtn.onclick = () => {
     const ctx = selfieCanvas.getContext("2d");
