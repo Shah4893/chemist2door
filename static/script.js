@@ -9,48 +9,77 @@ const resultText = document.getElementById("resultText");
 
 let selfieBase64 = "";
 let idBase64 = "";
+let verifyLocked = false;
 
-/* CAMERA FIX */
+/* ---------------------------
+   SECURE CAMERA START
+---------------------------- */
 async function startCamera() {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({
             video: {
                 facingMode: "user",
-                width: { min: 640, ideal: 1280, max: 1920 },
-                height: { min: 480, ideal: 720, max: 1080 }
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
             }
         });
 
+        if (!stream || !stream.getTracks().length) {
+            throw new Error("Fake or invalid camera stream");
+        }
+
         video.srcObject = stream;
         await video.play();
+
         video.setAttribute("playsinline", true);
 
     } catch (err) {
+        console.error("Camera error:", err);
         resultText.style.color = "#ff4444";
-        resultText.textContent = "Camera not accessible.";
+        resultText.textContent = "Camera blocked or unavailable.";
     }
 }
 
 startCamera();
 
-/* SELFIE CAPTURE */
+/* ---------------------------
+   SECURE SELFIE CAPTURE
+---------------------------- */
 captureBtn.onclick = () => {
     const ctx = selfieCanvas.getContext("2d");
 
     selfieCanvas.width = video.videoWidth;
     selfieCanvas.height = video.videoHeight;
 
-    ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+    ctx.drawImage(video, 0, 0);
 
-    selfieBase64 = selfieCanvas.toDataURL("image/jpeg", 1.0);
+    const raw = selfieCanvas.toDataURL("image/jpeg", 1.0);
 
-    resultText.textContent = "Selfie captured. Ready to verify.";
+    // Anti‑spoofing: ensure image is not blank
+    if (raw.length < 50000) {
+        resultText.style.color = "#ff4444";
+        resultText.textContent = "Selfie invalid. Try again.";
+        return;
+    }
+
+    selfieBase64 = raw;
+
+    resultText.style.color = "#00eaff";
+    resultText.textContent = "Selfie captured.";
 };
 
-/* ID UPLOAD */
+/* ---------------------------
+   SECURE ID UPLOAD
+---------------------------- */
 idInput.onchange = () => {
     const file = idInput.files[0];
     if (!file) return;
+
+    if (file.size < 50000) {
+        resultText.style.color = "#ff4444";
+        resultText.textContent = "ID image too small or corrupted.";
+        return;
+    }
 
     idFileName.textContent = file.name;
 
@@ -59,25 +88,36 @@ idInput.onchange = () => {
         idBase64 = reader.result;
         idPreview.src = reader.result;
 
-        resultText.textContent = "ID loaded. Capture selfie and start verification.";
+        resultText.style.color = "#00eaff";
+        resultText.textContent = "ID loaded.";
     };
 
     reader.readAsDataURL(file);
 };
 
-/* VERIFY */
+/* ---------------------------
+   SECURE VERIFY
+---------------------------- */
 verifyBtn.onclick = async () => {
 
+    if (verifyLocked) return;
+    verifyLocked = true;
+
     if (!selfieBase64) {
+        resultText.style.color = "#ff4444";
         resultText.textContent = "Please capture a selfie.";
+        verifyLocked = false;
         return;
     }
 
     if (!idBase64) {
+        resultText.style.color = "#ff4444";
         resultText.textContent = "Please upload an ID image.";
+        verifyLocked = false;
         return;
     }
 
+    resultText.style.color = "#00eaff";
     resultText.textContent = "Processing...";
 
     const payload = {
@@ -92,17 +132,51 @@ verifyBtn.onclick = async () => {
             body: JSON.stringify(payload)
         });
 
-        const data = await res.json();
+        let data = null;
+
+        try {
+            data = await res.json();
+        } catch {
+            throw new Error("Invalid JSON response from server");
+        }
+
+        if (!res.ok) {
+            resultText.style.color = "#ff4444";
+            resultText.textContent = data.message || "Verification failed.";
+            verifyLocked = false;
+            return;
+        }
+
+        // Anti‑spoofing: backend must return similarity + code
+        if (!("similarity" in data) || !("code" in data)) {
+            resultText.style.color = "#ff4444";
+            resultText.textContent = "Invalid server response.";
+            verifyLocked = false;
+            return;
+        }
 
         if (data.status === true) {
-            resultText.textContent = "✔ Verification Successful";
-            setTimeout(() => window.location.href = "/", 2000);
+            resultText.style.color = "#00ff99";
+            resultText.textContent = "✔ Verified";
+
+            setTimeout(() => {
+                window.location.href = "/";
+            }, 2000);
+
         } else {
-            resultText.textContent = "✘ Verification Failed";
-            setTimeout(() => window.location.href = "/", 2500);
+            resultText.style.color = "#ff4444";
+            resultText.textContent = "✘ " + (data.message || "Verification failed");
+
+            setTimeout(() => {
+                window.location.href = "/";
+            }, 2500);
         }
 
     } catch (e) {
+        console.error("VERIFY ERROR:", e);
+        resultText.style.color = "#ff4444";
         resultText.textContent = "Request error.";
     }
+
+    verifyLocked = false;
 };
