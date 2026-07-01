@@ -147,8 +147,8 @@ verifyBtn.onclick = async () => {
             return;
         }
 
-        // Anti‑spoofing: backend must return similarity + code
-        if (!("similarity" in data) || !("code" in data)) {
+        // Backend returns: status, code, face_similarity, eye_similarity, age, dob, etc.
+        if (!("face_similarity" in data) || !("code" in data)) {
             resultText.style.color = "#ff4444";
             resultText.textContent = "Invalid server response.";
             verifyLocked = false;
