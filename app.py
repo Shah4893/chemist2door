@@ -15,66 +15,89 @@ CORS(app)
 
 logging.basicConfig(level=logging.INFO)
 
-# COMMERCIAL-STYLE STRICT THRESHOLDS
-# 0.0 = totally different, 1.0 = identical
-FACE_HARD_FAIL = 0.60      # below this = definite mismatch
-FACE_STRONG_PASS = 0.80    # above this = strong verified
-
-EYE_HARD_FAIL = 0.55       # eye-region similarity strict
+# THRESHOLDS
+FACE_HARD_FAIL = 0.60
+FACE_STRONG_PASS = 0.80
+EYE_HARD_FAIL = 0.55
 EYE_STRONG_PASS = 0.78
+
+
+# -----------------------------
+# SAFE UTILITIES
+# -----------------------------
+def safe_normalize(vec):
+    try:
+        n = norm(vec)
+        if n == 0:
+            return vec
+        return vec / n
+    except:
+        return vec
 
 
 def decode_image(data):
     try:
         if not data:
             return None
+
         if "," in data:
             data = data.split(",", 1)[1]
+
         img_bytes = base64.b64decode(data)
         np_arr = np.frombuffer(img_bytes, np.uint8)
         img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+
         if img is None:
             return None
+
         return cv2.resize(img, (500, 500))
-    except:
+
+    except Exception as e:
+        logging.exception("decode_image failed")
         return None
 
 
-def extract_embedding(emb):
-    if isinstance(emb, list):
-        emb = emb[0]
-    return np.array(emb["embedding"], dtype=np.float32)
+def extract_embedding(result):
+    try:
+        if isinstance(result, list) and len(result) > 0:
+            emb = result[0].get("embedding", None)
+            if emb is None:
+                return None
+            return np.array(emb, dtype=np.float32)
+        return None
+    except:
+        return None
 
 
 def extract_dob_from_id(id_img):
     try:
         gray = cv2.cvtColor(id_img, cv2.COLOR_BGR2GRAY)
-        text = pytesseract.image_to_string(gray)
+        text = pytesseract.image_to_string(gray, config="--psm 6")
         text = text.replace(" ", "")
 
-        m = re.findall(r"\d{4}-\d{2}-\d{2}", text)
-        if m:
-            try:
-                return datetime.strptime(m[0], "%Y-%m-%d").date()
-            except:
-                pass
+        patterns = [
+            r"\d{4}-\d{2}-\d{2}",
+            r"\d{2}/\d{2}/\d{4}",
+            r"\d{2}\.\d{2}\.\d{4}"
+        ]
 
-        m = re.findall(r"\d{2}/\d{2}/\d{4}", text)
-        if m:
-            try:
-                return datetime.strptime(m[0], "%d/%m/%Y").date()
-            except:
-                pass
-
-        m = re.findall(r"\d{2}\.\d{2}\.\d{4}", text)
-        if m:
-            try:
-                return datetime.strptime(m[0], "%d.%m.%Y").date()
-            except:
-                pass
+        for p in patterns:
+            m = re.findall(p, text)
+            if m:
+                try:
+                    if "-" in m[0]:
+                        return datetime.strptime(m[0], "%Y-%m-%d").date()
+                    elif "/" in m[0]:
+                        return datetime.strptime(m[0], "%d/%m/%Y").date()
+                    elif "." in m[0]:
+                        return datetime.strptime(m[0], "%d.%m.%Y").date()
+                except:
+                    continue
 
         return None
-    except:
+
+    except Exception as e:
+        logging.exception("DOB extraction failed")
         return None
 
 
@@ -84,25 +107,46 @@ def calculate_age(dob):
 
 
 def crop_eye_region(img):
-    """
-    Simple eye-region crop (top middle of face area).
-    Not true biometric, but adds extra check.
-    """
     try:
         h, w, _ = img.shape
-        # Rough region: upper 40% of image, center 60% width
-        y1 = int(h * 0.15)
-        y2 = int(h * 0.45)
-        x1 = int(w * 0.20)
-        x2 = int(w * 0.80)
+        y1, y2 = int(h * 0.15), int(h * 0.45)
+        x1, x2 = int(w * 0.20), int(w * 0.80)
+
         eye = img[y1:y2, x1:x2]
-        if eye.size == 0:
+
+        if eye is None or eye.size == 0:
             return img
+
         return cv2.resize(eye, (300, 300))
+
     except:
         return img
 
 
+def get_embedding(img):
+    """
+    SAFE DeepFace wrapper
+    """
+    try:
+        result = DeepFace.represent(
+            img=img,   # ✅ FIX: img_path removed
+            model_name="Facenet512",
+            enforce_detection=False,
+            detector_backend="opencv",
+            align=True
+        )
+
+        emb = extract_embedding(result)
+        return emb
+
+    except Exception as e:
+        logging.exception("DeepFace embedding failed")
+        return None
+
+
+# -----------------------------
+# ROUTES
+# -----------------------------
 @app.route("/")
 def home():
     return render_template("index.html")
@@ -123,114 +167,76 @@ def verify():
                 "message": "Invalid or missing images"
             }), 400
 
-        # AGE CHECK FROM ID
+        # ---------------- AGE CHECK ----------------
         dob = extract_dob_from_id(id_img)
         age = None
         age_checked = False
         underage_blocked = False
 
-        if dob is not None:
+        if dob:
             age = calculate_age(dob)
             age_checked = True
             if age < 18:
                 underage_blocked = True
 
-        # MAIN FACE EMBEDDINGS (FULL FACE)
-        emb_selfie = DeepFace.represent(
-            img_path=selfie,
-            model_name="Facenet512",
-            enforce_detection=False,
-            detector_backend="opencv",
-            align=True
-        )
+        # ---------------- FACE EMBEDDINGS ----------------
+        emb_selfie = get_embedding(selfie)
+        emb_id = get_embedding(id_img)
 
-        emb_id = DeepFace.represent(
-            img_path=id_img,
-            model_name="Facenet512",
-            enforce_detection=False,
-            detector_backend="opencv",
-            align=True
-        )
-
-        if not emb_selfie or not emb_id:
+        if emb_selfie is None or emb_id is None:
             return jsonify({
                 "status": False,
                 "code": "NO_FACE",
                 "message": "No face detected"
             }), 422
 
-        emb_selfie = extract_embedding(emb_selfie)
-        emb_id = extract_embedding(emb_id)
-
-        emb_selfie = emb_selfie / norm(emb_selfie)
-        emb_id = emb_id / norm(emb_id)
+        emb_selfie = safe_normalize(emb_selfie)
+        emb_id = safe_normalize(emb_id)
 
         face_similarity = float(np.dot(emb_selfie, emb_id))
 
-        # EXTRA: EYE REGION CHECK
+        # ---------------- EYE CHECK ----------------
         selfie_eye = crop_eye_region(selfie)
         id_eye = crop_eye_region(id_img)
 
-        eye_emb_selfie = DeepFace.represent(
-            img_path=selfie_eye,
-            model_name="Facenet512",
-            enforce_detection=False,
-            detector_backend="opencv",
-            align=True
-        )
+        eye_emb_selfie = get_embedding(selfie_eye)
+        eye_emb_id = get_embedding(id_eye)
 
-        eye_emb_id = DeepFace.represent(
-            img_path=id_eye,
-            model_name="Facenet512",
-            enforce_detection=False,
-            detector_backend="opencv",
-            align=True
-        )
+        eye_similarity = None
 
-        if eye_emb_selfie and eye_emb_id:
-            eye_emb_selfie = extract_embedding(eye_emb_selfie)
-            eye_emb_id = extract_embedding(eye_emb_id)
-
-            eye_emb_selfie = eye_emb_selfie / norm(eye_emb_selfie)
-            eye_emb_id = eye_emb_id / norm(eye_emb_id)
-
+        if eye_emb_selfie is not None and eye_emb_id is not None:
+            eye_emb_selfie = safe_normalize(eye_emb_selfie)
+            eye_emb_id = safe_normalize(eye_emb_id)
             eye_similarity = float(np.dot(eye_emb_selfie, eye_emb_id))
-        else:
-            eye_similarity = None
 
-        # DECISION LOGIC – COMMERCIAL STYLE
+        # ---------------- DECISION ----------------
         final_status = False
         decision = "FACE_MISMATCH"
 
-        # First: age block
         if underage_blocked:
-            final_status = False
             decision = "UNDERAGE"
 
         else:
-            # Face must be strongly similar
             if face_similarity < FACE_HARD_FAIL:
-                final_status = False
                 decision = "FACE_MISMATCH"
+
             else:
-                # If we have eye similarity, use it as extra gate
                 if eye_similarity is not None:
                     if eye_similarity < EYE_HARD_FAIL:
-                        final_status = False
                         decision = "EYE_MISMATCH"
+
                     elif face_similarity >= FACE_STRONG_PASS and eye_similarity >= EYE_STRONG_PASS:
                         final_status = True
                         decision = "VERIFIED_STRONG"
+
                     else:
-                        final_status = False
                         decision = "BIOMETRIC_UNCERTAIN"
+
                 else:
-                    # No eye data, rely only on strong face similarity
                     if face_similarity >= FACE_STRONG_PASS:
                         final_status = True
                         decision = "VERIFIED_STRONG"
                     else:
-                        final_status = False
                         decision = "FACE_UNCERTAIN"
 
         return jsonify({
@@ -253,6 +259,7 @@ def verify():
         }), 500
 
 
+# -----------------------------
 if __name__ == "__main__":
     print("Secure Verify running on http://127.0.0.1:5000")
     app.run(host="0.0.0.0", port=5000, debug=False, threaded=True)
