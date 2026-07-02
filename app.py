@@ -139,7 +139,7 @@ def verify():
         emb_selfie = DeepFace.represent(
             img_path=selfie,
             model_name="Facenet512",
-            enforce_detection=True,
+            enforce_detection=False,
             detector_backend="opencv",
             align=True
         )
@@ -147,7 +147,7 @@ def verify():
         emb_id = DeepFace.represent(
             img_path=id_img,
             model_name="Facenet512",
-            enforce_detection=True,
+            enforce_detection=False,
             detector_backend="opencv",
             align=True
         )
