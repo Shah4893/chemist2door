@@ -94,33 +94,28 @@ verifyBtn.onclick = async () => {
         const timeout = setTimeout(() => controller.abort(), 15000);
 
         const res = await fetch("/verify", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                selfie: selfieBase64,
-                id_image: idBase64
-            }),
-            signal: controller.signal
-        });
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+        selfie: selfieBase64,
+        id_image: idBase64
+    }),
+    signal: controller.signal
+});
 
-        clearTimeout(timeout);
+const data = await res.json();
 
-        const data = await res.json();
+// OLD: res.ok check hata do
 
-        if (!res.ok) {
-            resultText.textContent = data.message || "Failed";
-            return;
-        }
+if (data.status) {
+    resultText.textContent = "✔ Verified – redirecting...";
+    setTimeout(() => {
+        window.location.href = "https://chemist2door.co.uk/";
+    }, 2000);
+} else {
+    resultText.textContent = "✘ " + (data.message || "Verification failed");
+}
 
-        if (data.status) {
-            resultText.textContent = "✔ Verified – redirecting...";
-            // redirect to main Chemist2Door homepage
-            setTimeout(() => {
-                window.location.href = "https://chemist2door.co.uk/";
-            }, 2000);
-        } else {
-            resultText.textContent = "✘ " + (data.code || "Verification failed");
-        }
 
     } catch (err) {
         console.error(err);
