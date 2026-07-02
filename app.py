@@ -31,7 +31,7 @@ def safe_normalize(vec):
         if n == 0:
             return vec
         return vec / n
-    except:
+    except Exception:
         return vec
 
 
@@ -65,7 +65,7 @@ def extract_embedding(result):
                 return None
             return np.array(emb, dtype=np.float32)
         return None
-    except:
+    except Exception:
         return None
 
 
@@ -91,7 +91,7 @@ def extract_dob_from_id(id_img):
                         return datetime.strptime(m[0], "%d/%m/%Y").date()
                     elif "." in m[0]:
                         return datetime.strptime(m[0], "%d.%m.%Y").date()
-                except:
+                except Exception:
                     continue
 
         return None
@@ -119,21 +119,20 @@ def crop_eye_region(img):
 
         return cv2.resize(eye, (300, 300))
 
-    except:
+    except Exception:
         return img
 
 
 def get_embedding(img):
     """
     SAFE DeepFace wrapper
+    Strict detection: fake / non-face images fail.
     """
-    try:
-        def get_embedding(img):
     try:
         result = DeepFace.represent(
             img_path=img,
             model_name="Facenet512",
-            enforce_detection=False,
+            enforce_detection=True,
             detector_backend="opencv",
             align=True
         )
@@ -144,7 +143,6 @@ def get_embedding(img):
     except Exception:
         logging.exception("DeepFace embedding failed")
         return None
-
 
 
 # -----------------------------
