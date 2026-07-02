@@ -132,7 +132,7 @@ def get_embedding(img):
         result = DeepFace.represent(
             img_path=img,
             model_name="Facenet512",
-            enforce_detection=True,
+            enforce_detection=False,
             detector_backend="opencv",
             align=True
         )
