@@ -52,28 +52,34 @@ detectFace();
 
 // SELFIE HOLD FUNCTION
 captureBtn.onclick = () => {
-    const ctx = selfieCanvas.getContext("2d");
 
+    // Canvas setup
+    const ctx = selfieCanvas.getContext("2d");
     selfieCanvas.width = video.videoWidth;
     selfieCanvas.height = video.videoHeight;
 
+    // Draw current frame
     ctx.drawImage(video, 0, 0);
 
+    // Convert to Base64
     selfieBase64 = selfieCanvas.toDataURL("image/jpeg", 0.8);
 
-    // HOLD MODE
-    video.pause();
-    video.style.opacity = "0";
-    selfieCanvas.style.display = "block";
+    // HOLD MODE (THIS IS THE IMPORTANT PART)
+    const stream = video.srcObject;
+    const tracks = stream.getTracks();
+    tracks.forEach(track => track.stop());   // camera OFF
+
+    video.style.display = "none";            // hide video
+    selfieCanvas.style.display = "block";    // show frozen selfie
 
     captureBtn.disabled = true;
     captureBtn.innerText = "Selfie Captured";
 
-    // Hide oval after capture
-    faceOval.style.display = "none";
+    faceOval.style.display = "none";         // hide oval frame
 
     resultText.textContent = "Selfie captured and locked.";
 };
+
 
 
 // ID UPLOAD
