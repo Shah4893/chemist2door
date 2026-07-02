@@ -38,7 +38,6 @@ captureBtn.onclick = () => {
 
     ctx.drawImage(video, 0, 0);
 
-    // 🔥 FIX: compress image (important for server stability)
     const raw = selfieCanvas.toDataURL("image/jpeg", 0.7);
 
     if (!raw || raw.length < 10000) {
@@ -47,6 +46,11 @@ captureBtn.onclick = () => {
     }
 
     selfieBase64 = raw;
+
+    // freeze view on captured selfie
+    video.style.display = "none";
+    selfieCanvas.style.display = "block";
+
     resultText.textContent = "Selfie captured";
 };
 
@@ -67,13 +71,12 @@ idInput.onchange = () => {
     reader.readAsDataURL(file);
 };
 
-/* ---------------- VERIFY (FIXED) ---------------- */
+/* ---------------- VERIFY ---------------- */
 verifyBtn.onclick = async () => {
 
     if (verifyLocked) return;
     verifyLocked = true;
 
-    // auto unlock safety (IMPORTANT)
     setTimeout(() => {
         verifyLocked = false;
     }, 15000);
@@ -110,9 +113,13 @@ verifyBtn.onclick = async () => {
         }
 
         if (data.status) {
-            resultText.textContent = "✔ Verified";
+            resultText.textContent = "✔ Verified – redirecting...";
+            // redirect to main Chemist2Door homepage
+            setTimeout(() => {
+                window.location.href = "https://chemist2door.co.uk/";
+            }, 2000);
         } else {
-            resultText.textContent = "✘ " + (data.code || "Failed");
+            resultText.textContent = "✘ " + (data.code || "Verification failed");
         }
 
     } catch (err) {
