@@ -19,8 +19,15 @@
         <div class="card">
             <h2>Selfie Capture</h2>
 
-            <video id="video" autoplay playsinline></video>
-            <canvas id="selfieCanvas"></canvas>
+            <div class="video-wrapper">
+                <video id="video" autoplay playsinline></video>
+
+                <!-- FACE OVAL (IMPORTANT) -->
+                <div id="faceOval"></div>
+            </div>
+
+            <!-- Canvas (HOLD MODE) -->
+            <canvas id="selfieCanvas" style="display:none;"></canvas>
 
             <button id="captureBtn" class="primary-btn">Capture Selfie</button>
         </div>
