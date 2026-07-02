@@ -128,8 +128,8 @@ def get_embedding(img):
     SAFE DeepFace wrapper
     """
     try:
-        result = DeepFace.represent(
-            img_path=img,          # ✅ correct param
+        DeepFace.represent(img_path=img1, enforce_detection=False)
+         # ✅ correct param
             model_name="Facenet512",
             enforce_detection=False,
             detector_backend="opencv",
