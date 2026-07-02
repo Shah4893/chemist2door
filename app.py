@@ -128,8 +128,10 @@ def get_embedding(img):
     SAFE DeepFace wrapper
     """
     try:
-        DeepFace.represent(img_path=img1, enforce_detection=False)
-         # ✅ correct param
+        def get_embedding(img):
+    try:
+        result = DeepFace.represent(
+            img_path=img,
             model_name="Facenet512",
             enforce_detection=False,
             detector_backend="opencv",
@@ -142,6 +144,7 @@ def get_embedding(img):
     except Exception:
         logging.exception("DeepFace embedding failed")
         return None
+
 
 
 # -----------------------------
