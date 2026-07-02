@@ -1,35 +1,56 @@
+// Elements
 const video = document.getElementById("video");
-const captureBtn = document.getElementById("captureBtn");
 const selfieCanvas = document.getElementById("selfieCanvas");
-const idInput = document.getElementById("idInput");
-const idPreview = document.getElementById("idPreview");
-const idFileName = document.getElementById("idFileName");
+const captureBtn = document.getElementById("captureBtn");
 const verifyBtn = document.getElementById("verifyBtn");
 const resultText = document.getElementById("resultText");
+const faceOval = document.getElementById("faceOval");
 
-let selfieBase64 = "";
-let idBase64 = "";
-let verifyLocked = false;
+let selfieBase64 = null;
+let idBase64 = null;
 
-/* ---------------- CAMERA ---------------- */
+// Start camera
 async function startCamera() {
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: "user" }
-        });
-
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         video.srcObject = stream;
-        await video.play();
-
+        video.play();
     } catch (err) {
-        console.error(err);
-        resultText.textContent = "Camera error";
+        console.log("Camera error:", err);
     }
 }
 
 startCamera();
 
-/* ---------------- SELFIE ---------------- */
+
+// FACE OVAL DETECTION
+async function detectFace() {
+    const faceDetector = new FaceDetector({ fastMode: true });
+
+    try {
+        const faces = await faceDetector.detect(video);
+
+        if (faces.length > 0) {
+            // FACE FOUND → GREEN OVAL
+            faceOval.style.borderColor = "#00ff00";
+            faceOval.style.boxShadow = "0 0 25px #00ff00";
+        } else {
+            // NO FACE → BLUE OVAL
+            faceOval.style.borderColor = "rgba(0,180,255,0.8)";
+            faceOval.style.boxShadow = "0 0 25px rgba(0,180,255,0.4)";
+        }
+
+    } catch (e) {
+        console.log("FaceDetector not supported");
+    }
+
+    requestAnimationFrame(detectFace);
+}
+
+detectFace();
+
+
+// SELFIE HOLD FUNCTION
 captureBtn.onclick = () => {
     const ctx = selfieCanvas.getContext("2d");
 
@@ -38,92 +59,63 @@ captureBtn.onclick = () => {
 
     ctx.drawImage(video, 0, 0);
 
-    const raw = selfieCanvas.toDataURL("image/jpeg", 0.7);
+    selfieBase64 = selfieCanvas.toDataURL("image/jpeg", 0.8);
 
-    if (!raw || raw.length < 10000) {
-        resultText.textContent = "Selfie capture failed";
-        return;
-    }
-
-    selfieBase64 = raw;
-
-    // freeze view on captured selfie
-    video.style.display = "none";
+    // HOLD MODE
+    video.pause();
+    video.style.opacity = "0";
     selfieCanvas.style.display = "block";
 
-    resultText.textContent = "Selfie captured";
+    captureBtn.disabled = true;
+    captureBtn.innerText = "Selfie Captured";
+
+    // Hide oval after capture
+    faceOval.style.display = "none";
+
+    resultText.textContent = "Selfie captured and locked.";
 };
 
-/* ---------------- ID UPLOAD ---------------- */
-idInput.onchange = () => {
-    const file = idInput.files[0];
-    if (!file) return;
 
+// ID UPLOAD
+document.getElementById("idInput").onchange = function (e) {
+    const file = e.target.files[0];
     const reader = new FileReader();
 
-    reader.onload = () => {
+    reader.onload = function () {
         idBase64 = reader.result;
-        idPreview.src = reader.result;
-        idFileName.textContent = file.name;
-        resultText.textContent = "ID loaded";
+        resultText.textContent = "ID loaded.";
     };
 
     reader.readAsDataURL(file);
 };
 
-/* ---------------- VERIFY ---------------- */
+
+// VERIFY BUTTON
 verifyBtn.onclick = async () => {
-
-    if (verifyLocked) return;
-    verifyLocked = true;
-
-    setTimeout(() => {
-        verifyLocked = false;
-    }, 15000);
-
     if (!selfieBase64 || !idBase64) {
-        resultText.textContent = "Missing images";
-        verifyLocked = false;
+        resultText.textContent = "Please capture selfie and upload ID.";
         return;
     }
 
-    resultText.textContent = "Processing...";
+    resultText.textContent = "Verifying...";
 
-    try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 15000);
+    const res = await fetch("/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            selfie: selfieBase64,
+            id_image: idBase64
+        })
+    });
 
-        const res = await fetch("/verify", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-        selfie: selfieBase64,
-        id_image: idBase64
-    }),
-    signal: controller.signal
-});
+    const data = await res.json();
 
-const data = await res.json();
-
-// OLD: res.ok check hata do
-
-if (data.status) {
-    resultText.textContent = "✔ Verified – redirecting...";
-    setTimeout(() => {
-        window.location.href = "https://chemist2door.co.uk/";
-    }, 2000);
-} else {
-    resultText.textContent = "✘ " + (data.message || "Verification failed");
-}
-
-
-    } catch (err) {
-        console.error(err);
-        resultText.textContent =
-            err.name === "AbortError"
-                ? "Request timeout"
-                : "Request failed";
-    } finally {
-        verifyLocked = false;
+    if (data.status) {
+        resultText.textContent = "✔ Verified – redirecting...";
+        setTimeout(() => {
+            window.location.href = "https://chemist2door.co.uk/";
+        }, 2000);
+    } else {
+        resultText.textContent = "✘ Verification failed";
     }
 };
