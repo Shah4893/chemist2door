@@ -52,7 +52,7 @@ def decode_image(data):
 
         return cv2.resize(img, (500, 500))
 
-    except Exception as e:
+    except Exception:
         logging.exception("decode_image failed")
         return None
 
@@ -96,7 +96,7 @@ def extract_dob_from_id(id_img):
 
         return None
 
-    except Exception as e:
+    except Exception:
         logging.exception("DOB extraction failed")
         return None
 
@@ -129,7 +129,7 @@ def get_embedding(img):
     """
     try:
         result = DeepFace.represent(
-            img_path=img, ...)   # ✅ FIX: img_path removed
+            img_path=img,          # ✅ correct param
             model_name="Facenet512",
             enforce_detection=False,
             detector_backend="opencv",
@@ -139,7 +139,7 @@ def get_embedding(img):
         emb = extract_embedding(result)
         return emb
 
-    except Exception as e:
+    except Exception:
         logging.exception("DeepFace embedding failed")
         return None
 
@@ -167,7 +167,7 @@ def verify():
                 "message": "Invalid or missing images"
             }), 400
 
-        # ---------------- AGE CHECK ----------------
+        # AGE CHECK
         dob = extract_dob_from_id(id_img)
         age = None
         age_checked = False
@@ -179,7 +179,7 @@ def verify():
             if age < 18:
                 underage_blocked = True
 
-        # ---------------- FACE EMBEDDINGS ----------------
+        # FACE EMBEDDINGS
         emb_selfie = get_embedding(selfie)
         emb_id = get_embedding(id_img)
 
@@ -195,7 +195,7 @@ def verify():
 
         face_similarity = float(np.dot(emb_selfie, emb_id))
 
-        # ---------------- EYE CHECK ----------------
+        # EYE CHECK
         selfie_eye = crop_eye_region(selfie)
         id_eye = crop_eye_region(id_img)
 
@@ -209,7 +209,7 @@ def verify():
             eye_emb_id = safe_normalize(eye_emb_id)
             eye_similarity = float(np.dot(eye_emb_selfie, eye_emb_id))
 
-        # ---------------- DECISION ----------------
+        # DECISION
         final_status = False
         decision = "FACE_MISMATCH"
 
@@ -250,7 +250,7 @@ def verify():
             "age_checked": age_checked
         })
 
-    except Exception as e:
+    except Exception:
         logging.exception("Error in /verify")
         return jsonify({
             "status": False,
@@ -259,7 +259,6 @@ def verify():
         }), 500
 
 
-# -----------------------------
 if __name__ == "__main__":
     print("Secure Verify running on http://127.0.0.1:5000")
     app.run(host="0.0.0.0", port=5000, debug=False, threaded=True)
