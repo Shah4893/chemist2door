@@ -12,7 +12,7 @@ let idBase64 = "";
 let verifyLocked = false;
 
 /* ---------------------------
-   SECURE CAMERA START
+   CAMERA
 ---------------------------- */
 async function startCamera() {
     try {
@@ -43,7 +43,7 @@ async function startCamera() {
 startCamera();
 
 /* ---------------------------
-   SECURE SELFIE CAPTURE
+   SELFIE CAPTURE
 ---------------------------- */
 captureBtn.onclick = () => {
     const ctx = selfieCanvas.getContext("2d");
@@ -55,7 +55,6 @@ captureBtn.onclick = () => {
 
     const raw = selfieCanvas.toDataURL("image/jpeg", 1.0);
 
-    // Anti‑spoofing: ensure image is not blank
     if (raw.length < 50000) {
         resultText.style.color = "#ff4444";
         resultText.textContent = "Selfie invalid. Try again.";
@@ -69,7 +68,7 @@ captureBtn.onclick = () => {
 };
 
 /* ---------------------------
-   SECURE ID UPLOAD
+   ID UPLOAD
 ---------------------------- */
 idInput.onchange = () => {
     const file = idInput.files[0];
@@ -96,7 +95,7 @@ idInput.onchange = () => {
 };
 
 /* ---------------------------
-   SECURE VERIFY
+   VERIFY
 ---------------------------- */
 verifyBtn.onclick = async () => {
 
@@ -147,7 +146,6 @@ verifyBtn.onclick = async () => {
             return;
         }
 
-        // Backend returns: status, code, face_similarity, eye_similarity, age, dob, etc.
         if (!("face_similarity" in data) || !("code" in data)) {
             resultText.style.color = "#ff4444";
             resultText.textContent = "Invalid server response.";
