@@ -11,40 +11,25 @@ let selfieBase64 = "";
 let idBase64 = "";
 let verifyLocked = false;
 
-/* ---------------------------
-   CAMERA
----------------------------- */
+/* ---------------- CAMERA ---------------- */
 async function startCamera() {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({
-            video: {
-                facingMode: "user",
-                width: { ideal: 1280 },
-                height: { ideal: 720 }
-            }
+            video: { facingMode: "user" }
         });
-
-        if (!stream || !stream.getTracks().length) {
-            throw new Error("Fake or invalid camera stream");
-        }
 
         video.srcObject = stream;
         await video.play();
 
-        video.setAttribute("playsinline", true);
-
     } catch (err) {
-        console.error("Camera error:", err);
-        resultText.style.color = "#ff4444";
-        resultText.textContent = "Camera blocked or unavailable.";
+        console.error(err);
+        resultText.textContent = "Camera error";
     }
 }
 
 startCamera();
 
-/* ---------------------------
-   SELFIE CAPTURE
----------------------------- */
+/* ---------------- SELFIE ---------------- */
 captureBtn.onclick = () => {
     const ctx = selfieCanvas.getContext("2d");
 
@@ -53,128 +38,90 @@ captureBtn.onclick = () => {
 
     ctx.drawImage(video, 0, 0);
 
-    const raw = selfieCanvas.toDataURL("image/jpeg", 1.0);
+    // 🔥 FIX: compress image (important for server stability)
+    const raw = selfieCanvas.toDataURL("image/jpeg", 0.7);
 
-    if (raw.length < 50000) {
-        resultText.style.color = "#ff4444";
-        resultText.textContent = "Selfie invalid. Try again.";
+    if (!raw || raw.length < 10000) {
+        resultText.textContent = "Selfie capture failed";
         return;
     }
 
     selfieBase64 = raw;
-
-    resultText.style.color = "#00eaff";
-    resultText.textContent = "Selfie captured.";
+    resultText.textContent = "Selfie captured";
 };
 
-/* ---------------------------
-   ID UPLOAD
----------------------------- */
+/* ---------------- ID UPLOAD ---------------- */
 idInput.onchange = () => {
     const file = idInput.files[0];
     if (!file) return;
 
-    if (file.size < 50000) {
-        resultText.style.color = "#ff4444";
-        resultText.textContent = "ID image too small or corrupted.";
-        return;
-    }
-
-    idFileName.textContent = file.name;
-
     const reader = new FileReader();
+
     reader.onload = () => {
         idBase64 = reader.result;
         idPreview.src = reader.result;
-
-        resultText.style.color = "#00eaff";
-        resultText.textContent = "ID loaded.";
+        idFileName.textContent = file.name;
+        resultText.textContent = "ID loaded";
     };
 
     reader.readAsDataURL(file);
 };
 
-/* ---------------------------
-   VERIFY
----------------------------- */
+/* ---------------- VERIFY (FIXED) ---------------- */
 verifyBtn.onclick = async () => {
 
     if (verifyLocked) return;
     verifyLocked = true;
 
-    if (!selfieBase64) {
-        resultText.style.color = "#ff4444";
-        resultText.textContent = "Please capture a selfie.";
+    // auto unlock safety (IMPORTANT)
+    setTimeout(() => {
+        verifyLocked = false;
+    }, 15000);
+
+    if (!selfieBase64 || !idBase64) {
+        resultText.textContent = "Missing images";
         verifyLocked = false;
         return;
     }
 
-    if (!idBase64) {
-        resultText.style.color = "#ff4444";
-        resultText.textContent = "Please upload an ID image.";
-        verifyLocked = false;
-        return;
-    }
-
-    resultText.style.color = "#00eaff";
     resultText.textContent = "Processing...";
 
-    const payload = {
-        selfie: selfieBase64,
-        id_image: idBase64
-    };
-
     try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
+
         const res = await fetch("/verify", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
+            body: JSON.stringify({
+                selfie: selfieBase64,
+                id_image: idBase64
+            }),
+            signal: controller.signal
         });
 
-        let data = null;
+        clearTimeout(timeout);
 
-        try {
-            data = await res.json();
-        } catch {
-            throw new Error("Invalid JSON response from server");
-        }
+        const data = await res.json();
 
         if (!res.ok) {
-            resultText.style.color = "#ff4444";
-            resultText.textContent = data.message || "Verification failed.";
-            verifyLocked = false;
+            resultText.textContent = data.message || "Failed";
             return;
         }
 
-        if (!("face_similarity" in data) || !("code" in data)) {
-            resultText.style.color = "#ff4444";
-            resultText.textContent = "Invalid server response.";
-            verifyLocked = false;
-            return;
-        }
-
-        if (data.status === true) {
-            resultText.style.color = "#00ff99";
+        if (data.status) {
             resultText.textContent = "✔ Verified";
-
-            setTimeout(() => {
-                window.location.href = "/";
-            }, 2000);
-
         } else {
-            resultText.style.color = "#ff4444";
-            resultText.textContent = "✘ " + (data.message || "Verification failed");
-
-            setTimeout(() => {
-                window.location.href = "/";
-            }, 2500);
+            resultText.textContent = "✘ " + (data.code || "Failed");
         }
 
-    } catch (e) {
-        console.error("VERIFY ERROR:", e);
-        resultText.style.color = "#ff4444";
-        resultText.textContent = "Request error.";
+    } catch (err) {
+        console.error(err);
+        resultText.textContent =
+            err.name === "AbortError"
+                ? "Request timeout"
+                : "Request failed";
+    } finally {
+        verifyLocked = false;
     }
-
-    verifyLocked = false;
 };
