@@ -1,10 +1,7 @@
-// =============================
 // ELEMENTS
-// =============================
 const video = document.getElementById("video");
 const selfieCanvas = document.getElementById("selfieCanvas");
 const captureBtn = document.getElementById("captureBtn");
-const retakeBtn = document.getElementById("retakeBtn");
 const verifyBtn = document.getElementById("verifyBtn");
 const resultBox = document.getElementById("resultBox");
 const resultText = document.getElementById("resultText");
@@ -13,19 +10,14 @@ const idInput = document.getElementById("idInput");
 const idPreview = document.getElementById("idPreview");
 const idFileName = document.getElementById("idFileName");
 
-// =============================
 // STATE
-// =============================
 let selfieBase64 = null;
 let idBase64 = null;
 let verifying = false;
 let streamRef = null;
 
-// =============================
 // HELPERS
-// =============================
 function showResult(message) {
-    resultBox.classList.remove("hidden");
     resultText.textContent = message;
 }
 
@@ -35,9 +27,7 @@ function updateVerifyButtonState() {
     verifyBtn.classList.toggle("disabled", !ready || verifying);
 }
 
-// =============================
-// CAMERA START (MASTER)
-// =============================
+// CAMERA START
 async function startCamera() {
     try {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -71,12 +61,9 @@ async function startCamera() {
     }
 }
 
-// Auto start
 startCamera();
 
-// =============================
-// FACE DETECTION (VISUAL ONLY)
-// =============================
+// FACE DETECTION (visual only)
 function detectFace() {
     const loop = () => {
         if (video.readyState >= 2 && video.videoWidth > 0) {
@@ -89,9 +76,7 @@ function detectFace() {
     loop();
 }
 
-// =============================
 // STOP CAMERA
-// =============================
 function stopCamera() {
     if (streamRef) {
         streamRef.getTracks().forEach(t => t.stop());
@@ -99,9 +84,7 @@ function stopCamera() {
     }
 }
 
-// =============================
-// SELFIE CAPTURE (MASTER)
-// =============================
+// SELFIE CAPTURE
 captureBtn.onclick = () => {
     if (!video.videoWidth || !video.videoHeight) {
         showResult("Camera still loading...");
@@ -110,24 +93,19 @@ captureBtn.onclick = () => {
 
     const ctx = selfieCanvas.getContext("2d");
 
-    // Match video resolution
     selfieCanvas.width = video.videoWidth;
     selfieCanvas.height = video.videoHeight;
 
     ctx.drawImage(video, 0, 0, selfieCanvas.width, selfieCanvas.height);
 
-    // High-quality JPEG but not huge
     selfieBase64 = selfieCanvas.toDataURL("image/jpeg", 0.9);
 
-    // Stop camera and show frozen frame
     stopCamera();
     video.style.display = "none";
     selfieCanvas.style.display = "block";
 
     captureBtn.disabled = true;
     captureBtn.innerText = "Captured";
-    retakeBtn.style.display = "inline-block";
-    retakeBtn.disabled = false;
 
     faceOval.style.display = "none";
 
@@ -135,29 +113,7 @@ captureBtn.onclick = () => {
     updateVerifyButtonState();
 };
 
-// =============================
-// RETAKE SELFIE (MASTER)
-// =============================
-retakeBtn.onclick = () => {
-    selfieBase64 = null;
-
-    selfieCanvas.style.display = "none";
-    video.style.display = "block";
-
-    captureBtn.disabled = false;
-    captureBtn.innerText = "Capture Selfie";
-    retakeBtn.style.display = "none";
-
-    faceOval.style.display = "block";
-
-    startCamera();
-    showResult("Retake selfie");
-    updateVerifyButtonState();
-};
-
-// =============================
-// ID UPLOAD (MASTER)
-// =============================
+// ID UPLOAD
 idInput.onchange = function (e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -188,9 +144,7 @@ idInput.onchange = function (e) {
     reader.readAsDataURL(file);
 };
 
-// =============================
-// VERIFY (MASTER)
-// =============================
+// VERIFY
 verifyBtn.onclick = async () => {
     if (verifying) return;
 
@@ -205,7 +159,7 @@ verifyBtn.onclick = async () => {
 
     try {
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 15000); // 15s timeout
+        const timeout = setTimeout(() => controller.abort(), 15000);
 
         const res = await fetch("/verify", {
             method: "POST",
