@@ -4,8 +4,12 @@
     <meta charset="UTF-8">
     <title>Chemist2Door – Age Verification</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <!-- CSS -->
     <link rel="stylesheet" href="/static/style.css">
+
+    <!-- Prevent caching (important for verification systems) -->
+    <meta http-equiv="Cache-Control" content="no-store" />
 </head>
 
 <body>
@@ -29,9 +33,10 @@
             </div>
 
             <!-- frozen selfie (hold mode) -->
-            <canvas id="selfieCanvas"></canvas>
+            <canvas id="selfieCanvas" style="display:none;"></canvas>
 
             <button id="captureBtn" class="primary-btn">Capture Selfie</button>
+            <button id="retakeBtn" class="secondary-btn" style="display:none;">Retake Selfie</button>
         </div>
 
         <!-- ID UPLOAD SECTION -->
@@ -45,16 +50,16 @@
             </div>
 
             <!-- ID preview -->
-            <img id="idPreview" alt="ID Preview">
+            <img id="idPreview" alt="ID Preview" style="display:none;">
         </div>
 
     </div>
 
     <!-- VERIFY BUTTON -->
-    <button id="verifyBtn" class="primary-btn">Start Verification</button>
+    <button id="verifyBtn" class="primary-btn disabled" disabled>Start Verification</button>
 
     <!-- RESULT BOX -->
-    <div id="resultBox" class="result-box">
+    <div id="resultBox" class="result-box hidden">
         <p id="resultText">Waiting for verification...</p>
     </div>
 
