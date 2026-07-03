@@ -157,13 +157,13 @@ verifyBtn.onclick = async () => {
 
         const data = await res.json();
 
-        if (data.status === "success") {
+        if (data.status === true) {
             resultText.textContent = "Verified";
             setTimeout(() => {
                 window.location.href = data.redirect || "https://chemist2door.co.uk/";
             }, 1500);
         } else {
-            resultText.textContent = data.message || "Failed";
+            resultText.textContent = data.message || data.code || "Verification failed";
         }
 
     } catch (err) {
