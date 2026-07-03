@@ -4,7 +4,11 @@
     <meta charset="UTF-8">
     <title>Chemist2Door – Age Verification</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/style.css">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/static/style.css?v=999">
+
+    <!-- Prevent caching -->
     <meta http-equiv="Cache-Control" content="no-store" />
 </head>
 
@@ -45,14 +49,18 @@
 
     </div>
 
+    <!-- VERIFY BUTTON -->
     <button id="verifyBtn" class="primary-btn disabled" disabled>Start Verification</button>
 
+    <!-- RESULT BOX -->
     <div id="resultBox" class="result-box">
         <p id="resultText">Waiting for verification...</p>
     </div>
 
 </div>
 
-<script src="/static/script.js"></script>
+<!-- JS -->
+<script src="/static/script.js?v=999" defer></script>
+
 </body>
 </html>
