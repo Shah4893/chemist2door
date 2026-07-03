@@ -31,6 +31,9 @@ body {
     color: #9fdfff;
     font-size: 14px;
 }
+.result-box {
+    display: block;
+}
 
 /* ROW */
 .row {
