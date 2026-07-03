@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Chemist2Door – Age Verification</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- CSS -->
     <link rel="stylesheet" href="/static/style.css">
 </head>
 
@@ -15,24 +16,25 @@
 
     <div class="row">
 
-        <!-- Selfie Section -->
+        <!-- SELFIE SECTION -->
         <div class="card">
             <h2>Selfie Capture</h2>
 
             <div class="video-wrapper">
+                <!-- live camera -->
                 <video id="video" autoplay playsinline></video>
 
-                <!-- FACE OVAL (IMPORTANT) -->
+                <!-- face oval guide -->
                 <div id="faceOval"></div>
             </div>
 
-            <!-- Canvas (HOLD MODE) -->
-            <canvas id="selfieCanvas" style="display:none;"></canvas>
+            <!-- frozen selfie (hold mode) -->
+            <canvas id="selfieCanvas"></canvas>
 
             <button id="captureBtn" class="primary-btn">Capture Selfie</button>
         </div>
 
-        <!-- ID Upload Section -->
+        <!-- ID UPLOAD SECTION -->
         <div class="card">
             <h2>ID Document</h2>
 
@@ -42,19 +44,23 @@
                 <p id="idFileName">No file selected</p>
             </div>
 
+            <!-- ID preview -->
             <img id="idPreview" alt="ID Preview">
         </div>
 
     </div>
 
+    <!-- VERIFY BUTTON -->
     <button id="verifyBtn" class="primary-btn">Start Verification</button>
 
+    <!-- RESULT BOX -->
     <div id="resultBox" class="result-box">
         <p id="resultText">Waiting for verification...</p>
     </div>
 
 </div>
 
+<!-- JS -->
 <script src="/static/script.js"></script>
 </body>
 </html>
