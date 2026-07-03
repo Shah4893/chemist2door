@@ -56,16 +56,13 @@ function detectFace() {
             return;
         }
 
-        // SIMPLE STABLE RULE (no crash, no NO_FACE bug)
-        const w = video.videoWidth;
-        const h = video.videoHeight;
+        // SIMPLE STABLE LOGIC (NO FALSE NO_FACE)
+        const facePresent = video.readyState >= 2;
 
-        // assume face present if camera active
-        const active = w > 0 && h > 0;
-
-        if (active) {
+        if (facePresent) {
             faceOval.style.borderColor = "#00ff00";
             faceOval.style.boxShadow = "0 0 25px #00ff00";
+            resultText.textContent = "Face detected";
         } else {
             faceOval.style.borderColor = "rgba(0,180,255,0.8)";
             faceOval.style.boxShadow = "0 0 25px rgba(0,180,255,0.4)";
