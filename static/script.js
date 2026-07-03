@@ -106,17 +106,26 @@ captureBtn.onclick = () => {
 // -----------------------------
 // ID UPLOAD
 // -----------------------------
+// ID UPLOAD (MASTER FIXED VERSION)
+const idPreview = document.getElementById("idPreview");
+const idFileName = document.getElementById("idFileName");
+
 idInput.onchange = function (e) {
     const file = e.target.files[0];
+
     if (!file) {
         resultText.textContent = "Please select ID image.";
+        idPreview.style.display = "none";
+        idFileName.textContent = "No file selected";
         return;
     }
 
-    // basic size limit (e.g. 5MB)
+    // Size limit (5MB)
     if (file.size > 5 * 1024 * 1024) {
         resultText.textContent = "ID image too large (max 5MB).";
         idInput.value = "";
+        idPreview.style.display = "none";
+        idFileName.textContent = "No file selected";
         return;
     }
 
@@ -124,11 +133,21 @@ idInput.onchange = function (e) {
 
     reader.onload = function () {
         idBase64 = reader.result;
+
+        // ID preview show
+        idPreview.src = reader.result;
+        idPreview.style.display = "block";
+
+        // File name show
+        idFileName.textContent = file.name;
+
         resultText.textContent = "ID loaded.";
     };
 
     reader.onerror = function () {
         resultText.textContent = "Error reading ID file.";
+        idPreview.style.display = "none";
+        idFileName.textContent = "No file selected";
     };
 
     reader.readAsDataURL(file);
