@@ -119,12 +119,12 @@ def crop_eye_region(img):
         return img
 
 
-def get_embedding(img):
+def get_embedding(img, strict=True):
     try:
         result = DeepFace.represent(
             img_path=img,
             model_name="Facenet512",
-            enforce_detection=True,
+            enforce_detection=strict,
             detector_backend="retinaface",   # FIXED
             align=True
         )
@@ -175,7 +175,7 @@ def verify():
         # FACE EMBEDDINGS
         # -----------------------------
         emb_selfie = get_embedding(selfie)
-        emb_id = get_embedding(id_img)
+        emb_id = get_embedding(id_img, strict=False)
 
         if emb_selfie is None or emb_id is None:
             return jsonify({
