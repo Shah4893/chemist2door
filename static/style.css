@@ -4,6 +4,7 @@
     box-sizing: border-box;
 }
 
+/* BODY */
 body {
     background: radial-gradient(circle at top, #0af, #001020);
     font-family: Arial, sans-serif;
@@ -11,7 +12,7 @@ body {
     min-height: 100vh;
 }
 
-/* Main container */
+/* MAIN CONTAINER */
 .container {
     max-width: 1100px;
     margin: 20px auto;
@@ -31,7 +32,7 @@ body {
     font-size: 14px;
 }
 
-/* Row */
+/* ROW */
 .row {
     display: flex;
     gap: 20px;
@@ -40,7 +41,7 @@ body {
     flex-wrap: wrap;
 }
 
-/* Card */
+/* CARD */
 .card {
     flex: 1 1 450px;
     max-width: 500px;
@@ -56,7 +57,7 @@ body {
     margin-bottom: 15px;
 }
 
-/* VIDEO WRAPPER (IMPORTANT FOR FACE OVAL) */
+/* VIDEO WRAPPER */
 .video-wrapper {
     position: relative;
     width: 100%;
@@ -78,12 +79,12 @@ canvas,
     object-fit: contain;
 }
 
-/* CANVAS DEFAULT HIDDEN */
+/* SELFIE CANVAS DEFAULT HIDDEN (IMPORTANT: NO !important) */
 #selfieCanvas {
-    display: none !important;
+    display: none;
 }
 
-/* FACE OVAL (EXACT ONFIDO/YOTI STYLE) */
+/* FACE OVAL */
 #faceOval {
     position: absolute;
     top: 50%;
@@ -98,34 +99,39 @@ canvas,
     transition: 0.3s ease;
 }
 
-/* BUTTONS */
+/* BUTTONS + UPLOAD LABEL */
 button,
 .upload-label {
     width: 100%;
     display: block;
     padding: 14px;
     margin-top: 15px;
-
     border: none;
     border-radius: 10px;
-
     background: #12E6EF;
     color: #000;
-
     font-weight: bold;
     font-size: 18px;
-
     cursor: pointer;
     transition: 0.25s;
     text-align: center;
 }
 
+/* HOVER */
 button:hover,
 .upload-label:hover {
     background: #00c8ff;
 }
 
-/* Upload */
+/* DISABLED STATE (VERIFY / CAPTURE LOCK) */
+button:disabled,
+button[disabled] {
+    background: #4a8b92;
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
+/* UPLOAD BOX */
 .upload-box {
     width: 100%;
     border: 2px dashed rgba(0, 255, 255, 0.4);
@@ -144,14 +150,12 @@ button:hover,
     word-break: break-word;
 }
 
-/* Result */
+/* RESULT BOX */
 .result-box {
     margin-top: 25px;
     padding: 15px;
-
     border-radius: 10px;
     border: 1px solid rgba(0, 255, 255, 0.4);
-
     background: rgba(5, 15, 25, 0.95);
 }
 
@@ -160,7 +164,7 @@ button:hover,
     font-weight: bold;
 }
 
-/* Mobile */
+/* MOBILE RESPONSIVE */
 @media (max-width: 768px) {
 
     .container {
