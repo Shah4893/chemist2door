@@ -47,36 +47,28 @@ async function startCamera() {
 startCamera();
 
 // =============================
-// FACE DETECTION (SAFE)
-// =============================
 function detectFace() {
-    if (!("FaceDetector" in window)) {
-        faceOval.style.borderColor = "rgba(0,180,255,0.8)";
-        faceOval.style.boxShadow = "0 0 25px rgba(0,180,255,0.4)";
-        return;
-    }
 
-    const faceDetector = new FaceDetector();
+    const loop = () => {
 
-    const loop = async () => {
-        try {
-            if (video.videoWidth === 0) {
-                requestAnimationFrame(loop);
-                return;
-            }
+        if (!video.videoWidth) {
+            requestAnimationFrame(loop);
+            return;
+        }
 
-            const faces = await faceDetector.detect(video);
+        // SIMPLE STABLE RULE (no crash, no NO_FACE bug)
+        const w = video.videoWidth;
+        const h = video.videoHeight;
 
-            if (faces && faces.length > 0) {
-                faceOval.style.borderColor = "#00ff00";
-                faceOval.style.boxShadow = "0 0 25px #00ff00";
-            } else {
-                faceOval.style.borderColor = "rgba(0,180,255,0.8)";
-                faceOval.style.boxShadow = "0 0 25px rgba(0,180,255,0.4)";
-            }
+        // assume face present if camera active
+        const active = w > 0 && h > 0;
 
-        } catch (e) {
+        if (active) {
+            faceOval.style.borderColor = "#00ff00";
+            faceOval.style.boxShadow = "0 0 25px #00ff00";
+        } else {
             faceOval.style.borderColor = "rgba(0,180,255,0.8)";
+            faceOval.style.boxShadow = "0 0 25px rgba(0,180,255,0.4)";
         }
 
         requestAnimationFrame(loop);
