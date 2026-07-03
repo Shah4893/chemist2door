@@ -16,24 +16,22 @@ CORS(app)
 logging.basicConfig(level=logging.INFO)
 
 # -----------------------------
-# THRESHOLDS (thore strict rakhay)
+# THRESHOLDS
 # -----------------------------
-FACE_HARD_FAIL = 0.60       # is se neeche direct fail
-FACE_STRONG_PASS = 0.82     # strong match
+FACE_HARD_FAIL = 0.60
+FACE_STRONG_PASS = 0.82
 EYE_HARD_FAIL = 0.55
 EYE_STRONG_PASS = 0.80
 
 
 # -----------------------------
-# SAFE UTILITIES
+# UTILITIES
 # -----------------------------
 def safe_normalize(vec):
     try:
         n = norm(vec)
-        if n == 0:
-            return vec
-        return vec / n
-    except Exception:
+        return vec / n if n != 0 else vec
+    except:
         return vec
 
 
@@ -42,7 +40,6 @@ def decode_image(data):
         if not data:
             return None
 
-        # dataURL se base64 part nikalna
         if "," in data:
             data = data.split(",", 1)[1]
 
@@ -53,10 +50,9 @@ def decode_image(data):
         if img is None:
             return None
 
-        # size normalize
         return cv2.resize(img, (500, 500))
 
-    except Exception:
+    except:
         logging.exception("decode_image failed")
         return None
 
@@ -64,12 +60,12 @@ def decode_image(data):
 def extract_embedding(result):
     try:
         if isinstance(result, list) and len(result) > 0:
-            emb = result[0].get("embedding", None)
+            emb = result[0].get("embedding")
             if emb is None:
                 return None
             return np.array(emb, dtype=np.float32)
         return None
-    except Exception:
+    except:
         return None
 
 
@@ -95,12 +91,12 @@ def extract_dob_from_id(id_img):
                         return datetime.strptime(m[0], "%d/%m/%Y").date()
                     elif "." in m[0]:
                         return datetime.strptime(m[0], "%d.%m.%Y").date()
-                except Exception:
+                except:
                     continue
 
         return None
 
-    except Exception:
+    except:
         logging.exception("DOB extraction failed")
         return None
 
@@ -113,40 +109,28 @@ def calculate_age(dob):
 def crop_eye_region(img):
     try:
         h, w, _ = img.shape
-        # sirf upper middle area (eyes zone)
         y1, y2 = int(h * 0.15), int(h * 0.45)
         x1, x2 = int(w * 0.20), int(w * 0.80)
-
         eye = img[y1:y2, x1:x2]
-
         if eye is None or eye.size == 0:
             return img
-
         return cv2.resize(eye, (300, 300))
-
-    except Exception:
+    except:
         return img
 
 
 def get_embedding(img):
-    """
-    SAFE DeepFace wrapper
-    yahan fake / non-face ko strict treat karna
-    """
     try:
         result = DeepFace.represent(
             img_path=img,
             model_name="Facenet512",
-            enforce_detection=True,      # strict face detection
-            detector_backend="opencv",
+            enforce_detection=True,
+            detector_backend="retinaface",   # FIXED
             align=True
         )
-
-        emb = extract_embedding(result)
-        return emb
-
-    except Exception:
-        logging.exception("DeepFace embedding failed")
+        return extract_embedding(result)
+    except Exception as e:
+        logging.error(f"DeepFace failed: {e}")
         return None
 
 
@@ -227,22 +211,18 @@ def verify():
         final_status = False
         decision = "FACE_MISMATCH"
 
-        # underage direct block
         if underage_blocked:
             decision = "UNDERAGE"
 
         else:
-            # face bohot low → direct fail
             if face_similarity < FACE_HARD_FAIL:
                 decision = "FACE_MISMATCH"
 
             else:
-                # agar eyes bhi available hain
                 if eye_similarity is not None:
                     if eye_similarity < EYE_HARD_FAIL:
                         decision = "EYE_MISMATCH"
 
-                    # strong face + strong eyes → verified
                     elif face_similarity >= FACE_STRONG_PASS and eye_similarity >= EYE_STRONG_PASS:
                         final_status = True
                         decision = "VERIFIED_STRONG"
@@ -251,16 +231,12 @@ def verify():
                         decision = "BIOMETRIC_UNCERTAIN"
 
                 else:
-                    # sirf face strong ho to bhi allow
                     if face_similarity >= FACE_STRONG_PASS:
                         final_status = True
                         decision = "VERIFIED_STRONG"
                     else:
                         decision = "FACE_UNCERTAIN"
 
-        # -----------------------------
-        # RESPONSE (frontend yahan se redirect kare)
-        # -----------------------------
         return jsonify({
             "status": final_status,
             "code": decision,
@@ -270,7 +246,7 @@ def verify():
             "dob": dob.isoformat() if dob else None,
             "age": age,
             "age_checked": age_checked,
-            "redirect": "/" if final_status else None  # frontend JS: agar redirect != None to homepage
+            "redirect": "/" if final_status else None
         })
 
     except Exception:
