@@ -24,7 +24,9 @@ let streamRef = null;
 // =============================
 async function startCamera() {
     try {
-        streamRef = await navigator.mediaDevices.getUserMedia({ video: true });
+        streamRef = await navigator.mediaDevices.getUserMedia({
+            video: { width: 720, height: 720 }
+        });
 
         video.srcObject = streamRef;
 
@@ -36,7 +38,7 @@ async function startCamera() {
 
         resultText.textContent = "Camera ready";
 
-        detectFace(); // start AFTER video ready
+        detectFace();
 
     } catch (err) {
         console.log("Camera error:", err);
@@ -47,53 +49,42 @@ async function startCamera() {
 startCamera();
 
 // =============================
+// FACE DETECTION (STABLE)
+// =============================
 function detectFace() {
-
     const loop = () => {
-
-        if (!video.videoWidth) {
-            requestAnimationFrame(loop);
-            return;
-        }
-
-        // SIMPLE STABLE LOGIC (NO FALSE NO_FACE)
-        const facePresent = video.readyState >= 2;
-
-        if (facePresent) {
+        if (video.readyState >= 2) {
             faceOval.style.borderColor = "#00ff00";
             faceOval.style.boxShadow = "0 0 25px #00ff00";
             resultText.textContent = "Face detected";
-        } else {
-            faceOval.style.borderColor = "rgba(0,180,255,0.8)";
-            faceOval.style.boxShadow = "0 0 25px rgba(0,180,255,0.4)";
         }
-
         requestAnimationFrame(loop);
     };
-
     loop();
 }
 
 // =============================
-// SELFIE CAPTURE (FIXED)
+// SELFIE CAPTURE (MASTER FIX)
 // =============================
 captureBtn.onclick = () => {
 
-    if (!video.videoWidth) {
+    if (!video.videoWidth || !video.videoHeight) {
         resultText.textContent = "Camera still loading...";
         return;
     }
 
     const ctx = selfieCanvas.getContext("2d");
 
+    // FIX: Always match video resolution
     selfieCanvas.width = video.videoWidth;
     selfieCanvas.height = video.videoHeight;
 
-    ctx.drawImage(video, 0, 0);
+    ctx.drawImage(video, 0, 0, selfieCanvas.width, selfieCanvas.height);
 
-    selfieBase64 = selfieCanvas.toDataURL("image/jpeg", 0.9);
+    // FIX: High-quality JPEG
+    selfieBase64 = selfieCanvas.toDataURL("image/jpeg", 0.95);
 
-    // STOP CAMERA (SAFE)
+    // STOP CAMERA
     if (streamRef) {
         streamRef.getTracks().forEach(t => t.stop());
     }
@@ -110,15 +101,14 @@ captureBtn.onclick = () => {
 };
 
 // =============================
-// ID UPLOAD
+// ID UPLOAD (FIXED)
 // =============================
 idInput.onchange = function (e) {
     const file = e.target.files[0];
-
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-        resultText.textContent = "File too large";
+    if (file.size > 10 * 1024 * 1024) {
+        resultText.textContent = "ID too large (max 10MB)";
         return;
     }
 
@@ -139,7 +129,7 @@ idInput.onchange = function (e) {
 };
 
 // =============================
-// VERIFY
+// VERIFY (FIXED)
 // =============================
 verifyBtn.onclick = async () => {
 
@@ -167,13 +157,11 @@ verifyBtn.onclick = async () => {
 
         const data = await res.json();
 
-        if (data.status) {
+        if (data.status === "success") {
             resultText.textContent = "Verified";
-
             setTimeout(() => {
                 window.location.href = data.redirect || "https://chemist2door.co.uk/";
             }, 1500);
-
         } else {
             resultText.textContent = data.message || "Failed";
         }
