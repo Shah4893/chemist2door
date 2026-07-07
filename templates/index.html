@@ -2,182 +2,173 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Chemist2Door – Age Verification & Admin Panel</title>
+    <title>Chemist2Door – Secure Verification</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link rel="stylesheet" href="/static/style.css?v=999">
+    <link rel="stylesheet" href="/static/style.css?v=1001">
     <meta http-equiv="Cache-Control" content="no-store" />
 
     <style>
-        .page { display: none; }
-        .active { display: block; }
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f7fa;
+            margin: 0;
+            padding: 0;
+        }
 
-        .login-box {
+        .container {
+            width: 95%;
+            max-width: 1100px;
+            margin: auto;
+            padding-top: 20px;
+        }
+
+        .main-title {
+            text-align: center;
+            font-size: 32px;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #555;
+            margin-bottom: 25px;
+        }
+
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .card {
             background: #fff;
-            padding: 30px;
-            width: 350px;
-            margin: 40px auto;
+            padding: 20px;
+            width: 480px;
             border-radius: 10px;
             box-shadow: 0 0 10px #ccc;
-            text-align: center;
         }
-        .login-box input {
-            width: 90%;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 6px;
-            border: 1px solid #ccc;
+
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            height: auto;
         }
-        .login-box button {
-            width: 95%;
+
+        #video {
+            width: 100%;
+            border-radius: 10px;
+        }
+
+        #faceOval {
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            height: 50%;
+            border: 3px solid #ff0000;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        #selfieCanvas {
+            display: none;
+            width: 100%;
+            border-radius: 10px;
+        }
+
+        .primary-btn {
+            width: 100%;
             padding: 12px;
             background: #0077cc;
             color: #fff;
             border: none;
             border-radius: 6px;
+            margin-top: 15px;
             cursor: pointer;
             font-size: 16px;
         }
-        .login-box button:hover { background: #005fa3; }
-        .error { color: red; margin-bottom: 10px; }
 
-        table {
-            width: 95%;
-            margin: 20px auto;
-            border-collapse: collapse;
-            background: #fff;
+        .primary-btn.disabled {
+            background: #999;
+            cursor: not-allowed;
+        }
+
+        .upload-box {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        #idPreview {
+            display: none;
+            width: 100%;
+            margin-top: 10px;
+            border-radius: 10px;
             box-shadow: 0 0 10px #ccc;
         }
-        th, td {
-            padding: 12px;
-            border: 1px solid #ddd;
+
+        #resultBox {
+            margin-top: 20px;
+            background: #fff;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px #ccc;
             text-align: center;
         }
-        th { background: #0077cc; color: #fff; }
-        tr:nth-child(even) { background: #f9f9f9; }
 
-        .logout-btn {
-            display: block;
-            width: 200px;
-            margin: 20px auto;
-            padding: 12px;
-            background: #cc0000;
-            color: #fff;
-            text-align: center;
-            border-radius: 6px;
-            text-decoration: none;
+        #resultText {
+            font-size: 18px;
+            font-weight: bold;
         }
-        .logout-btn:hover { background: #a30000; }
-
-        /* Admin link removed from public page */
     </style>
 </head>
 
 <body>
 
-<!-- ========================= -->
-<!-- USER VERIFICATION PAGE    -->
-<!-- ========================= -->
-<div id="verifyPage" class="page active">
+<div class="container">
 
-    <div class="container">
+    <h1 class="main-title">Chemist2Door Secure Verify</h1>
+    <p class="subtitle">Selfie + ID biometric verification</p>
 
-        <h1 class="main-title">Chemist2Door Secure Verify</h1>
-        <p class="subtitle">Selfie + ID biometric verification</p>
+    <div class="row">
 
-        <div class="row">
+        <!-- SELFIE SECTION -->
+        <div class="card">
+            <h2>Selfie Capture</h2>
 
-            <!-- SELFIE SECTION -->
-            <div class="card">
-                <h2>Selfie Capture</h2>
-
-                <div class="video-wrapper">
-                    <video id="video" autoplay playsinline></video>
-                    <div id="faceOval"></div>
-                </div>
-
-                <canvas id="selfieCanvas"></canvas>
-
-                <button id="captureBtn" class="primary-btn">Capture Selfie</button>
+            <div class="video-wrapper">
+                <video id="video" autoplay playsinline></video>
+                <div id="faceOval"></div>
             </div>
 
-            <!-- ID SECTION -->
-            <div class="card">
-                <h2>ID Document</h2>
+            <canvas id="selfieCanvas"></canvas>
 
-                <div class="upload-box">
-                    <input type="file" id="idInput" accept="image/*">
-                    <label for="idInput" class="upload-label">Browse ID Image</label>
-                    <p id="idFileName">No file selected</p>
-                </div>
+            <button id="captureBtn" class="primary-btn">Capture Selfie</button>
+        </div>
 
-                <img id="idPreview" alt="ID Preview">
+        <!-- ID SECTION -->
+        <div class="card">
+            <h2>ID Document</h2>
+
+            <div class="upload-box">
+                <input type="file" id="idInput" accept="image/*">
+                <label for="idInput" class="primary-btn">Browse ID Image</label>
+                <p id="idFileName">No file selected</p>
             </div>
 
+            <img id="idPreview" alt="ID Preview">
         </div>
 
-        <button id="verifyBtn" class="primary-btn disabled" disabled>Start Verification</button>
-
-        <div id="resultBox" class="result-box">
-            <p id="resultText">Waiting for verification...</p>
-        </div>
-
-        <!-- ADMIN BUTTON REMOVED COMPLETELY -->
-        <!-- No admin link here -->
     </div>
 
-</div>
+    <button id="verifyBtn" class="primary-btn disabled" disabled>Start Verification</button>
 
-<!-- ========================= -->
-<!-- ADMIN LOGIN PAGE (Separate URL Only) -->
-<!-- ========================= -->
-<div id="adminLoginPage" class="page">
-
-    <div class="login-box">
-        <h2>Admin Login</h2>
-        <p id="loginError" class="error"></p>
-
-        <form method="POST" action="/admin/login">
-            <input type="text" name="username" placeholder="Admin ID">
-            <input type="password" name="password" placeholder="Password">
-            <button type="submit">Login</button>
-        </form>
-
-        <div class="admin-link">
-            <a href="/" class="primary-btn">← Back to Verification</a>
-        </div>
+    <div id="resultBox">
+        <p id="resultText">Waiting for verification...</p>
     </div>
 
-</div>
-
-<!-- ========================= -->
-<!-- STATS PAGE                -->
-<!-- ========================= -->
-<div id="statsPage" class="page">
-
-    <h1 style="text-align:center;">Chemist2Door Verification Report</h1>
-
-    <h2 style="text-align:center;">Daily Summary</h2>
-    <table id="summaryTable">
-        <tr>
-            <th>Date</th>
-            <th>Total Attempts</th>
-            <th>Verified</th>
-            <th>Failed</th>
-        </tr>
-    </table>
-
-    <h2 style="text-align:center;">Detailed Logs (Last 7 Days)</h2>
-    <table id="logsTable">
-        <tr>
-            <th>Verification ID</th>
-            <th>Result</th>
-            <th>Reason</th>
-            <th>Timestamp</th>
-        </tr>
-    </table>
-
-    <a href="/admin/logout" class="logout-btn">Logout</a>
 </div>
 
 <script>
@@ -201,6 +192,13 @@ document.getElementById("captureBtn").onclick = () => {
     ctx.drawImage(video, 0, 0);
 
     selfieBase64 = canvas.toDataURL("image/jpeg");
+
+    document.getElementById("video").style.display = "none";
+    canvas.style.display = "block";
+
+    document.getElementById("captureBtn").textContent = "Captured";
+    document.getElementById("captureBtn").disabled = true;
+
     checkReady();
 };
 
@@ -214,7 +212,9 @@ document.getElementById("idInput").onchange = function () {
     const reader = new FileReader();
     reader.onload = function (e) {
         idBase64 = e.target.result;
-        document.getElementById("idPreview").src = idBase64;
+        const preview = document.getElementById("idPreview");
+        preview.src = idBase64;
+        preview.style.display = "block";
         checkReady();
     };
     reader.readAsDataURL(file);
