@@ -9,7 +9,6 @@
     <meta http-equiv="Cache-Control" content="no-store" />
 
     <style>
-        /* ADMIN + STATS PAGE STYLES */
         .page { display: none; }
         .active { display: block; }
 
@@ -70,15 +69,7 @@
         }
         .logout-btn:hover { background: #a30000; }
 
-        .admin-link {
-            text-align: center;
-            margin-top: 20px;
-        }
-        .admin-link a {
-            color: #0077cc;
-            font-size: 18px;
-            text-decoration: none;
-        }
+        /* GDPR: Admin link removed from public page */
     </style>
 </head>
 
@@ -131,8 +122,9 @@
             <p id="resultText">Waiting for verification...</p>
         </div>
 
-        <div class="admin-link">
-            <a href="#" onclick="openAdmin()">Admin Panel</a>
+        <!-- GDPR: Admin link removed -->
+        <div style="text-align:center;margin-top:20px;">
+            <a href="/admin/login" class="primary-btn">Admin Login</a>
         </div>
 
     </div>
@@ -148,12 +140,14 @@
         <h2>Admin Login</h2>
         <p id="loginError" class="error"></p>
 
-        <input type="text" id="adminUser" placeholder="Admin ID">
-        <input type="password" id="adminPass" placeholder="Password">
-        <button onclick="loginAdmin()">Login</button>
+        <form method="POST" action="/admin/login">
+            <input type="text" name="username" placeholder="Admin ID">
+            <input type="password" name="password" placeholder="Password">
+            <button type="submit">Login</button>
+        </form>
 
         <div class="admin-link">
-            <a href="#" onclick="backToVerify()">← Back to Verification</a>
+            <a href="/" class="primary-btn">← Back to Verification</a>
         </div>
     </div>
 
@@ -186,76 +180,82 @@
         </tr>
     </table>
 
-    <a href="#" class="logout-btn" onclick="logoutAdmin()">Logout</a>
+    <a href="/admin/logout" class="logout-btn">Logout</a>
 </div>
 
-<!-- JS -->
-<script src="/static/script.js?v=999" defer></script>
-
 <script>
-    function openAdmin() {
-        document.getElementById("verifyPage").classList.remove("active");
-        document.getElementById("adminLoginPage").classList.add("active");
+let selfieBase64 = null;
+let idBase64 = null;
+
+/* CAMERA INIT */
+navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+    document.getElementById("video").srcObject = stream;
+});
+
+/* CAPTURE SELFIE */
+document.getElementById("captureBtn").onclick = () => {
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("selfieCanvas");
+    const ctx = canvas.getContext("2d");
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    ctx.drawImage(video, 0, 0);
+
+    selfieBase64 = canvas.toDataURL("image/jpeg");
+    checkReady();
+};
+
+/* ID UPLOAD */
+document.getElementById("idInput").onchange = function () {
+    const file = this.files[0];
+    if (!file) return;
+
+    document.getElementById("idFileName").innerText = file.name;
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        idBase64 = e.target.result;
+        document.getElementById("idPreview").src = idBase64;
+        checkReady();
+    };
+    reader.readAsDataURL(file);
+};
+
+/* ENABLE VERIFY BUTTON */
+function checkReady() {
+    const btn = document.getElementById("verifyBtn");
+    if (selfieBase64 && idBase64) {
+        btn.disabled = false;
+        btn.classList.remove("disabled");
     }
+}
 
-    function backToVerify() {
-        document.getElementById("adminLoginPage").classList.remove("active");
-        document.getElementById("verifyPage").classList.add("active");
-    }
+/* VERIFY API CALL */
+document.getElementById("verifyBtn").onclick = () => {
+    document.getElementById("resultText").innerText = "Processing...";
 
-    function loginAdmin() {
-        const user = document.getElementById("adminUser").value;
-        const pass = document.getElementById("adminPass").value;
-
-        if (user === "chemist2door" && pass === "Ali123?") {
-            document.getElementById("adminLoginPage").classList.remove("active");
-            document.getElementById("statsPage").classList.add("active");
-            loadStats();
+    fetch("/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            selfie: selfieBase64,
+            id_image: idBase64
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === true) {
+            document.getElementById("resultText").innerText = "✔ Verified Successfully!";
         } else {
-            document.getElementById("loginError").innerText = "Invalid credentials";
+            document.getElementById("resultText").innerText = "❌ Verification Failed";
         }
-    }
-
-    function logoutAdmin() {
-        document.getElementById("statsPage").classList.remove("active");
-        document.getElementById("verifyPage").classList.add("active");
-    }
-
-    function loadStats() {
-        fetch("/stats")
-            .then(res => res.json())
-            .then(data => {
-
-                const summaryTable = document.getElementById("summaryTable");
-                const logsTable = document.getElementById("logsTable");
-
-                const stats = data;
-                const logs = data.logs || [];
-
-                Object.keys(stats).forEach(day => {
-                    const row = stats[day];
-                    summaryTable.innerHTML += `
-                        <tr>
-                            <td>${day}</td>
-                            <td>${row.total_attempts}</td>
-                            <td>${row.verified}</td>
-                            <td>${row.failed}</td>
-                        </tr>
-                    `;
-                });
-
-                logs.forEach(log => {
-                    logsTable.innerHTML += `
-                        <tr>
-                            <td>${log.verification_id}</td>
-                            <td>${log.result}</td>
-                            <td>${log.reason}</td>
-                            <td>${log.timestamp}</td>
-                        </tr>
-                    `;
-                });
-            });
-    }
+    })
+    .catch(() => {
+        document.getElementById("resultText").innerText = "❌ Server Error";
+    });
+};
 </script>
 
 </body>
