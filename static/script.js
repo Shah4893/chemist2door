@@ -20,6 +20,11 @@ function showResult(msg) {
 function updateVerifyButton() {
     const ready = selfieBase64 && idBase64;
     verifyBtn.disabled = !ready || verifying;
+
+    // FIX: Remove disabled class when ready
+    if (ready && !verifying) {
+        verifyBtn.classList.remove("disabled");
+    }
 }
 
 async function startCamera() {
@@ -85,6 +90,8 @@ captureBtn.onclick = () => {
     faceOval.style.display = "none";
 
     showResult("Selfie locked");
+
+    // FIX: DO NOT disable verify button here
     updateVerifyButton();
 };
 
@@ -99,6 +106,8 @@ idInput.onchange = e => {
         idPreview.style.display = "block";
         idFileName.textContent = file.name;
         showResult("ID loaded");
+
+        // FIX: Enable verify button after ID upload
         updateVerifyButton();
     };
     reader.readAsDataURL(file);
@@ -125,9 +134,6 @@ verifyBtn.onclick = async () => {
 
         if (data.status) {
             showResult("Verified");
-            setTimeout(() => {
-                window.location.href = data.redirect || "/";
-            }, 1500);
         } else {
             showResult(data.message || "Verification failed");
         }
