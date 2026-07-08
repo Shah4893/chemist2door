@@ -21,7 +21,6 @@ function showResult(message) {
 
 function updateButton() {
     if (!verifyBtn) return;
-
     verifyBtn.disabled = !(selfieBase64 && idBase64 && !verifying);
 }
 
@@ -33,9 +32,7 @@ async function startCamera() {
         }
 
         stream = await navigator.mediaDevices.getUserMedia({
-            video: {
-                facingMode: "user"
-            },
+            video: { facingMode: "user" },
             audio: false
         });
 
@@ -55,9 +52,7 @@ async function startCamera() {
 
 function stopCamera() {
     if (stream) {
-        stream.getTracks().forEach((track) => {
-            track.stop();
-        });
+        stream.getTracks().forEach((track) => track.stop());
         stream = null;
     }
 }
@@ -101,9 +96,7 @@ if (idInput) {
     idInput.onchange = function () {
         const file = this.files && this.files[0];
 
-        if (!file) {
-            return;
-        }
+        if (!file) return;
 
         if (!file.type.startsWith("image/")) {
             showResult("Only image files allowed");
@@ -146,9 +139,7 @@ if (idInput) {
 
 if (verifyBtn) {
     verifyBtn.onclick = async function () {
-        if (verifying) {
-            return;
-        }
+        if (verifying) return;
 
         if (!selfieBase64 || !idBase64) {
             showResult("Please capture selfie and upload ID first");
@@ -162,9 +153,7 @@ if (verifyBtn) {
         try {
             const response = await fetch("/verify", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     selfie: selfieBase64,
                     id_image: idBase64
