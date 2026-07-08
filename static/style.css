@@ -5,7 +5,7 @@
 }
 
 body {
-    background: radial-gradient(circle at top, #0af, #001020);
+    background: #020712;
     font-family: Arial, sans-serif;
     color: #e0f7ff;
     min-height: 100vh;
@@ -42,7 +42,7 @@ body {
     flex: 1 1 450px;
     max-width: 500px;
     width: 100%;
-    background: rgba(10, 20, 30, 0.95);
+    background: rgba(5, 10, 20, 0.98);
     border: 2px solid #00ffff;
     border-radius: 15px;
     padding: 18px;
@@ -129,6 +129,7 @@ button[disabled] {
     border: 2px dashed rgba(0, 255, 255, 0.4);
     border-radius: 10px;
     padding: 15px;
+    background: rgba(3, 8, 16, 0.95);
 }
 
 #idInput {
@@ -148,7 +149,7 @@ button[disabled] {
     padding: 15px;
     border-radius: 10px;
     border: 1px solid rgba(0, 255, 255, 0.4);
-    background: rgba(5, 15, 25, 0.95);
+    background: rgba(5, 15, 25, 0.98);
 }
 
 #resultText {
