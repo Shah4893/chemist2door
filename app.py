@@ -337,7 +337,12 @@ def is_admin():
 # =================================================
 # ADMIN ROUTES
 # =================================================
-
+@app.route("/")
+def home():
+    return jsonify({
+        "status": True,
+        "message": "Chemist2Door Verification API Running"
+    })
 @app.route("/login/admin")
 def login_admin_redirect():
     return redirect(url_for("admin_login"))
