@@ -188,28 +188,50 @@ def decode_image_base64(data):
 
     try:
         if not data:
+            logger.warning("Empty image data received")
             return None
 
+        # Remove base64 header
         if "," in data:
             data = data.split(",", 1)[1]
 
-        raw = base64.b64decode(data, validate=True)
+        # Fix missing base64 padding
+        data = data + "=" * (-len(data) % 4)
+
+        try:
+            raw = base64.b64decode(data)
+        except binascii.Error as e:
+            logger.warning("Base64 decode error: %s", e)
+            return None
 
         if len(raw) > GDPR_CONFIG["max_image_size"]:
+            logger.warning("Image too large")
             return None
 
         np_arr = np.frombuffer(raw, np.uint8)
-        img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
-        if img is None:
+        if np_arr.size == 0:
+            logger.warning("Empty numpy image buffer")
             return None
 
-        img = cv2.resize(img, (500, 500))
+        img = cv2.imdecode(
+            np_arr,
+            cv2.IMREAD_COLOR
+        )
+
+        if img is None:
+            logger.warning("OpenCV could not decode image")
+            return None
+
+        img = cv2.resize(
+            img,
+            (500, 500)
+        )
 
         return img
 
     except Exception as e:
-        logger.warning("Image decode failed: %s", e)
+        logger.exception("Image processing failed: %s", e)
         return None
 
 
