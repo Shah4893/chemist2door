@@ -39,7 +39,7 @@ async function startCamera() {
             audio: false
         });
 
-        video.setAttribute("playsinline", true);   // FIX: Desktop rotation/crop
+        video.setAttribute("playsinline", true);
         video.srcObject = streamRef;
         await video.play();
 
@@ -74,7 +74,7 @@ function stopCamera() {
     }
 }
 
-/* SELFIE CAPTURE — MASTER FIX */
+/* SELFIE CAPTURE */
 captureBtn.onclick = () => {
     if (!video.videoWidth) {
         showResult("Camera loading...");
@@ -84,7 +84,6 @@ captureBtn.onclick = () => {
     const w = video.videoWidth;
     const h = video.videoHeight;
 
-    // Square crop (centered face) — FIX for desktop mismatch
     const size = Math.min(w, h);
     const sx = (w - size) / 2;
     const sy = (h - size) / 2;
@@ -150,6 +149,13 @@ verifyBtn.onclick = async () => {
 
         if (data.status) {
             showResult("Verified");
+
+            // ⭐ REDIRECT FIX ⭐
+            if (data.redirect) {
+                window.location.href = data.redirect;
+                return;
+            }
+
         } else {
             showResult(data.message || "Verification failed");
         }
