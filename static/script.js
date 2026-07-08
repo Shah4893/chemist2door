@@ -19,13 +19,18 @@ function showResult(msg) {
 
 function updateVerifyButton() {
     const ready = selfieBase64 && idBase64;
-    verifyBtn.disabled = !ready || verifying;
 
-    // FIX: Remove disabled class when ready
     if (ready && !verifying) {
+        verifyBtn.disabled = false;
+        verifyBtn.removeAttribute("disabled");   // FIX: desktop issue
         verifyBtn.classList.remove("disabled");
+    } else {
+        verifyBtn.disabled = true;
+        verifyBtn.setAttribute("disabled", "true");
+        verifyBtn.classList.add("disabled");
     }
 }
+
 
 async function startCamera() {
     try {
