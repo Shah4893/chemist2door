@@ -163,6 +163,12 @@ def is_admin():
 # -------------------------------------------------
 # ROUTES
 # -------------------------------------------------
+
+# ⭐ NEW: /login/admin → redirect to admin login
+@app.route("/login/admin")
+def login_admin_redirect():
+    return redirect(url_for("admin_login"))
+
 @app.route("/admin/login", methods=["GET", "POST"])
 def admin_login():
     if request.method == "GET":
@@ -224,7 +230,7 @@ def verify():
         if similarity >= 0.55:
             update_stats(True)
             add_audit_log(verification_id, True, "verified")
-            return jsonify({"status": True}), 200
+            return jsonify({"status": True, "redirect": "/"}), 200
 
         update_stats(False)
         add_audit_log(verification_id, False, "face_mismatch")
