@@ -95,7 +95,7 @@ captureBtn.onclick = () => {
     const ctx = selfieCanvas.getContext("2d");
     ctx.drawImage(video, sx, sy, size, size, 0, 0, size, size);
 
-    selfieBase64 = selfieCanvas.toDataURL("image/jpeg", 0.95);
+    selfieBase64 = selfieCanvas.toDataURL("image/jpeg", 0.60);
 
     stopCamera();
     video.style.display = "none";
