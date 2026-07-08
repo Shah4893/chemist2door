@@ -1,170 +1,399 @@
 const video = document.getElementById("video");
-const selfieCanvas = document.getElementById("selfieCanvas");
+const canvas = document.getElementById("selfieCanvas");
+
 const captureBtn = document.getElementById("captureBtn");
 const verifyBtn = document.getElementById("verifyBtn");
-const resultText = document.getElementById("resultText");
-const faceOval = document.getElementById("faceOval");
+
 const idInput = document.getElementById("idInput");
 const idPreview = document.getElementById("idPreview");
+
 const idFileName = document.getElementById("idFileName");
+const resultText = document.getElementById("resultText");
+
+const faceOval = document.getElementById("faceOval");
+
 
 let selfieBase64 = null;
 let idBase64 = null;
+
+let stream = null;
 let verifying = false;
-let streamRef = null;
 
-function showResult(msg) {
-    resultText.textContent = msg;
+
+
+function showResult(message){
+
+    resultText.textContent = message;
+
 }
 
-function updateVerifyButton() {
-    const ready = selfieBase64 && idBase64;
 
-    if (ready && !verifying) {
+
+function updateButton(){
+
+    if(
+        selfieBase64 &&
+        idBase64 &&
+        !verifying
+    ){
+
         verifyBtn.disabled = false;
-        verifyBtn.removeAttribute("disabled");
-        verifyBtn.classList.remove("disabled");
-    } else {
-        verifyBtn.disabled = true;
-        verifyBtn.setAttribute("disabled", "true");
-        verifyBtn.classList.add("disabled");
+
     }
+    else{
+
+        verifyBtn.disabled = true;
+
+    }
+
 }
 
-/* CAMERA INIT */
-async function startCamera() {
-    try {
-        streamRef = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: "user" },
-            audio: false
+
+
+// ==============================
+// CAMERA START
+// ==============================
+
+async function startCamera(){
+
+    try{
+
+        stream = await navigator.mediaDevices.getUserMedia({
+
+            video:{
+                facingMode:"user"
+            },
+
+            audio:false
+
         });
 
-        video.setAttribute("playsinline", true);
-        video.srcObject = streamRef;
+
+        video.srcObject = stream;
+
         await video.play();
 
-        showResult("Camera ready");
-        detectFace();
 
-    } catch (err) {
-        showResult("Camera blocked");
+        showResult(
+            "Camera ready"
+        );
+
+
+        faceOval.style.borderColor="#00aa00";
+
+
     }
+
+    catch(error){
+
+        showResult(
+            "Camera permission denied"
+        );
+
+    }
+
 }
+
 
 startCamera();
 
-/* FACE DETECTION SIMULATION */
-function detectFace() {
-    const loop = () => {
-        if (video.readyState >= 2) {
-            faceOval.style.borderColor = "#00ff00";
-            faceOval.style.boxShadow = "0 0 25px #00ff00";
-            resultText.textContent = "Face detected";
-        }
-        requestAnimationFrame(loop);
-    };
-    loop();
-}
 
-/* STOP CAMERA */
-function stopCamera() {
-    if (streamRef) {
-        streamRef.getTracks().forEach(t => t.stop());
-        streamRef = null;
-    }
-}
 
-/* SELFIE CAPTURE */
-captureBtn.onclick = () => {
-    if (!video.videoWidth) {
-        showResult("Camera loading...");
-        return;
-    }
+// ==============================
+// STOP CAMERA
+// ==============================
 
-    const w = video.videoWidth;
-    const h = video.videoHeight;
+function stopCamera(){
 
-    const size = Math.min(w, h);
-    const sx = (w - size) / 2;
-    const sy = (h - size) / 2;
+    if(stream){
 
-    selfieCanvas.width = size;
-    selfieCanvas.height = size;
-
-    const ctx = selfieCanvas.getContext("2d");
-    ctx.drawImage(video, sx, sy, size, size, 0, 0, size, size);
-
-    selfieBase64 = selfieCanvas.toDataURL("image/jpeg", 0.60);
-
-    stopCamera();
-    video.style.display = "none";
-    selfieCanvas.style.display = "block";
-
-    captureBtn.disabled = true;
-    captureBtn.textContent = "Captured";
-
-    faceOval.style.display = "none";
-
-    showResult("Selfie locked");
-    updateVerifyButton();
-};
-
-/* ID UPLOAD */
-idInput.onchange = e => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-        idBase64 = reader.result;
-        idPreview.src = reader.result;
-        idPreview.style.display = "block";
-        idFileName.textContent = file.name;
-
-        showResult("ID loaded");
-        updateVerifyButton();
-    };
-    reader.readAsDataURL(file);
-};
-
-/* VERIFY API */
-verifyBtn.onclick = async () => {
-    if (verifying) return;
-
-    verifying = true;
-    updateVerifyButton();
-    showResult("Verifying...");
-
-    try {
-        const res = await fetch("/verify", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                selfie: selfieBase64,
-                id_image: idBase64
-            })
+        stream
+        .getTracks()
+        .forEach(track=>{
+            track.stop();
         });
 
-        const data = await res.json();
 
-        if (data.status) {
-            showResult("Verified");
+        stream=null;
 
-            // ⭐ Redirect FIX — ONLY HERE
-            if (data.redirect) {
-                window.location.href = data.redirect;
-                return;
-            }
-
-        } else {
-            showResult(data.message || "Verification failed");
-        }
-
-    } catch (err) {
-        showResult("Server error");
     }
 
-    verifying = false;
-    updateVerifyButton();
+}
+
+
+
+// ==============================
+// SELFIE CAPTURE
+// ==============================
+
+captureBtn.onclick=function(){
+
+
+    if(!video.videoWidth){
+
+        showResult(
+            "Camera loading"
+        );
+
+        return;
+
+    }
+
+
+
+    const width = video.videoWidth;
+    const height = video.videoHeight;
+
+
+    canvas.width = width;
+    canvas.height = height;
+
+
+    const ctx =
+    canvas.getContext("2d");
+
+
+    ctx.drawImage(
+        video,
+        0,
+        0,
+        width,
+        height
+    );
+
+
+
+    selfieBase64 =
+    canvas.toDataURL(
+        "image/jpeg",
+        0.65
+    );
+
+
+
+    stopCamera();
+
+
+
+    video.style.display="none";
+
+    canvas.style.display="block";
+
+    faceOval.style.display="none";
+
+
+    captureBtn.disabled=true;
+
+    captureBtn.textContent=
+    "Captured";
+
+
+    showResult(
+        "Selfie captured"
+    );
+
+
+    updateButton();
+
+
 };
 
+
+
+
+// ==============================
+// ID UPLOAD
+// ==============================
+
+
+idInput.onchange=function(){
+
+
+    const file=this.files[0];
+
+
+    if(!file)
+        return;
+
+
+
+    if(
+        !file.type.startsWith("image/")
+    ){
+
+        showResult(
+            "Only image files allowed"
+        );
+
+        return;
+
+    }
+
+
+
+
+    const reader =
+    new FileReader();
+
+
+
+    reader.onload=function(e){
+
+
+        idBase64=e.target.result;
+
+
+        idPreview.src=
+        idBase64;
+
+
+        idPreview.style.display=
+        "block";
+
+
+        idFileName.textContent=
+        file.name;
+
+
+
+        showResult(
+            "ID loaded"
+        );
+
+
+        updateButton();
+
+
+    };
+
+
+
+    reader.readAsDataURL(file);
+
+
+};
+
+
+
+
+// ==============================
+// VERIFY
+// ==============================
+
+
+verifyBtn.onclick=async function(){
+
+
+    if(verifying)
+        return;
+
+
+
+    verifying=true;
+
+    updateButton();
+
+
+    showResult(
+        "Verification running..."
+    );
+
+
+
+    try{
+
+
+        const response =
+        await fetch(
+            "/verify",
+            {
+
+                method:"POST",
+
+                headers:{
+
+                    "Content-Type":
+                    "application/json"
+
+                },
+
+
+                body:JSON.stringify({
+
+                    selfie:selfieBase64,
+
+                    id_image:idBase64
+
+                })
+
+
+            }
+        );
+
+
+
+        const data =
+        await response.json();
+
+
+
+        if(data.status===true){
+
+
+            showResult(
+                "✔ Verification successful"
+            );
+
+
+
+            if(data.redirect){
+
+                setTimeout(()=>{
+
+                    window.location.href =
+                    data.redirect;
+
+                },1000);
+
+            }
+
+
+        }
+
+
+        else{
+
+
+            showResult(
+
+                data.message ||
+                "Verification failed"
+
+            );
+
+
+        }
+
+
+
+    }
+
+
+    catch(error){
+
+
+        showResult(
+            "Server error"
+        );
+
+
+    }
+
+
+
+    verifying=false;
+
+    updateButton();
+
+
+};
