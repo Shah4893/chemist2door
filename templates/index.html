@@ -1,262 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
-<meta charset="UTF-8">
-<title>Chemist2Door Secure Age Verification</title>
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<meta http-equiv="Cache-Control" content="no-store">
-
-<link rel="stylesheet" href="/static/style.css">
-
-
-<style>
-
-body {
-    font-family: Arial, sans-serif;
-    background:#f4f7fa;
-    margin:0;
-}
-
-
-.container {
-
-    max-width:1100px;
-    width:95%;
-    margin:auto;
-    padding:20px;
-
-}
-
-
-h1 {
-
-    text-align:center;
-
-}
-
-
-.row {
-
-    display:flex;
-    flex-wrap:wrap;
-    gap:20px;
-    justify-content:center;
-
-}
-
-
-.card {
-
-    background:white;
-    width:450px;
-    padding:20px;
-    border-radius:12px;
-    box-shadow:0 0 12px #ccc;
-
-}
-
-
-video,
-canvas,
-img {
-
-    width:100%;
-    border-radius:10px;
-
-}
-
-
-canvas {
-
-    display:none;
-
-}
-
-
-button {
-
-    width:100%;
-    padding:14px;
-    margin-top:15px;
-    border:none;
-    border-radius:8px;
-    background:#0077cc;
-    color:white;
-    font-size:16px;
-    cursor:pointer;
-
-}
-
-
-button:disabled {
-
-    background:#999;
-    cursor:not-allowed;
-
-}
-
-
-#resultBox {
-
-    background:white;
-    padding:15px;
-    margin-top:20px;
-    text-align:center;
-    border-radius:10px;
-
-}
-
-
-#faceOval {
-
-    position:absolute;
-    top:20%;
-    left:50%;
-    transform:translateX(-50%);
-    width:60%;
-    height:50%;
-    border:3px solid red;
-    border-radius:50%;
-
-}
-
-
-.video-wrapper {
-
-    position:relative;
-
-}
-
-
-</style>
-
+    <meta charset="UTF-8">
+    <title>Chemist2Door Secure Age Verification</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-store">
+    <link rel="stylesheet" href="/static/style.css">
 </head>
-
-
 <body>
-
-
-<div class="container">
-
-
-<h1>
-Chemist2Door Secure Age Verification
-</h1>
-
-
-<p style="text-align:center">
-Selfie + ID verification
-</p>
-
-
-
-<div class="row">
-
-
-<div class="card">
-
-
-<h2>Selfie Capture</h2>
-
-
-<div class="video-wrapper">
-
-<video 
-id="video"
-autoplay
-playsinline>
-</video>
-
-
-<div id="faceOval"></div>
-
-
-</div>
-
-
-
-<canvas id="selfieCanvas"></canvas>
-
-
-
-<button id="captureBtn">
-Capture Selfie
-</button>
-
-
-</div>
-
-
-
-
-<div class="card">
-
-
-<h2>ID Document</h2>
-
-
-<input 
-type="file"
-id="idInput"
-accept="image/*">
-
-
-
-<p id="idFileName">
-No file selected
-</p>
-
-
-
-<img 
-id="idPreview"
-style="display:none;">
-
-
-
-</div>
-
-
-
-</div>
-
-
-
-
-<button 
-id="verifyBtn"
-disabled>
-
-Start Verification
-
-</button>
-
-
-
-
-<div id="resultBox">
-
-<p id="resultText">
-Waiting...
-</p>
-
-
-</div>
-
-
-
-</div>
-
-
-
-
-<script src="/static/app.js"></script>
-
-
+    <div class="container">
+        <h1 class="main-title">Chemist2Door Secure Age Verification</h1>
+        <p class="subtitle">Selfie + ID verification</p>
+
+        <div class="row">
+            <div class="card">
+                <h2>Selfie Capture</h2>
+
+                <div class="video-wrapper">
+                    <video id="video" autoplay playsinline></video>
+                    <div id="faceOval"></div>
+                </div>
+
+                <canvas id="selfieCanvas"></canvas>
+                <button id="captureBtn" type="button">Capture Selfie</button>
+            </div>
+
+            <div class="card">
+                <h2>ID Document</h2>
+
+                <div class="upload-box">
+                    <label for="idInput" class="upload-label">Upload ID Image</label>
+                    <input type="file" id="idInput" accept="image/*">
+                    <p id="idFileName">No file selected</p>
+                    <img id="idPreview" alt="ID document preview">
+                </div>
+            </div>
+        </div>
+
+        <button id="verifyBtn" type="button" disabled>Start Verification</button>
+
+        <div class="result-box" id="resultBox">
+            <p id="resultText">Waiting...</p>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
 </body>
-
 </html>
