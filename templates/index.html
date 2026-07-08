@@ -7,12 +7,23 @@
     <meta http-equiv="Cache-Control" content="no-store">
     <link rel="stylesheet" href="/static/style.css">
 </head>
+
 <body>
     <div class="container">
+
         <h1 class="main-title">Chemist2Door Secure Age Verification</h1>
         <p class="subtitle">Selfie + ID verification</p>
 
+        <!-- ADMIN LOGIN LINK (SAFE, REQUIRED BY YOUR APP.PY) -->
+        <p style="margin-bottom:20px;">
+            <a href="https://verify.chemist2door.co.uk/admin/login"
+               style="color:#00ffff; font-size:14px; text-decoration:none;">
+               Admin Login (Stats Dashboard)
+            </a>
+        </p>
+
         <div class="row">
+
             <div class="card">
                 <h2>Selfie Capture</h2>
 
@@ -35,6 +46,7 @@
                     <img id="idPreview" alt="ID document preview">
                 </div>
             </div>
+
         </div>
 
         <button id="verifyBtn" type="button" disabled>Start Verification</button>
@@ -42,6 +54,7 @@
         <div class="result-box" id="resultBox">
             <p id="resultText">Waiting...</p>
         </div>
+
     </div>
 
     <script src="/static/app.js"></script>
