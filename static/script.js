@@ -151,7 +151,8 @@ if (verifyBtn) {
         showResult("Verification running...");
 
         try {
-            const response = await fetch("/verify", {
+            const response = await fetch("https://verify.chemist2door.co.uk/verify", {
+
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
