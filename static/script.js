@@ -150,7 +150,7 @@ verifyBtn.onclick = async () => {
         if (data.status) {
             showResult("Verified");
 
-            // ⭐ REDIRECT FIX ⭐
+            // ⭐ Redirect FIX — ONLY HERE
             if (data.redirect) {
                 window.location.href = data.redirect;
                 return;
@@ -167,3 +167,4 @@ verifyBtn.onclick = async () => {
     verifying = false;
     updateVerifyButton();
 };
+
