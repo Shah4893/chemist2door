@@ -22,7 +22,7 @@ function updateVerifyButton() {
 
     if (ready && !verifying) {
         verifyBtn.disabled = false;
-        verifyBtn.removeAttribute("disabled");   // FIX: desktop issue
+        verifyBtn.removeAttribute("disabled");
         verifyBtn.classList.remove("disabled");
     } else {
         verifyBtn.disabled = true;
@@ -31,7 +31,7 @@ function updateVerifyButton() {
     }
 }
 
-
+/* CAMERA INIT */
 async function startCamera() {
     try {
         streamRef = await navigator.mediaDevices.getUserMedia({
@@ -39,6 +39,7 @@ async function startCamera() {
             audio: false
         });
 
+        video.setAttribute("playsinline", true);   // FIX: Desktop rotation/crop
         video.srcObject = streamRef;
         await video.play();
 
@@ -52,6 +53,7 @@ async function startCamera() {
 
 startCamera();
 
+/* FACE DETECTION SIMULATION */
 function detectFace() {
     const loop = () => {
         if (video.readyState >= 2) {
@@ -64,6 +66,7 @@ function detectFace() {
     loop();
 }
 
+/* STOP CAMERA */
 function stopCamera() {
     if (streamRef) {
         streamRef.getTracks().forEach(t => t.stop());
@@ -71,19 +74,28 @@ function stopCamera() {
     }
 }
 
+/* SELFIE CAPTURE — MASTER FIX */
 captureBtn.onclick = () => {
     if (!video.videoWidth) {
         showResult("Camera loading...");
         return;
     }
 
+    const w = video.videoWidth;
+    const h = video.videoHeight;
+
+    // Square crop (centered face) — FIX for desktop mismatch
+    const size = Math.min(w, h);
+    const sx = (w - size) / 2;
+    const sy = (h - size) / 2;
+
+    selfieCanvas.width = size;
+    selfieCanvas.height = size;
+
     const ctx = selfieCanvas.getContext("2d");
-    selfieCanvas.width = video.videoWidth;
-    selfieCanvas.height = video.videoHeight;
+    ctx.drawImage(video, sx, sy, size, size, 0, 0, size, size);
 
-    ctx.drawImage(video, 0, 0);
-
-    selfieBase64 = selfieCanvas.toDataURL("image/jpeg", 0.9);
+    selfieBase64 = selfieCanvas.toDataURL("image/jpeg", 0.95);
 
     stopCamera();
     video.style.display = "none";
@@ -95,11 +107,10 @@ captureBtn.onclick = () => {
     faceOval.style.display = "none";
 
     showResult("Selfie locked");
-
-    // FIX: DO NOT disable verify button here
     updateVerifyButton();
 };
 
+/* ID UPLOAD */
 idInput.onchange = e => {
     const file = e.target.files[0];
     if (!file) return;
@@ -110,14 +121,14 @@ idInput.onchange = e => {
         idPreview.src = reader.result;
         idPreview.style.display = "block";
         idFileName.textContent = file.name;
-        showResult("ID loaded");
 
-        // FIX: Enable verify button after ID upload
+        showResult("ID loaded");
         updateVerifyButton();
     };
     reader.readAsDataURL(file);
 };
 
+/* VERIFY API */
 verifyBtn.onclick = async () => {
     if (verifying) return;
 
