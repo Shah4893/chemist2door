@@ -55,8 +55,7 @@ CORS(
     resources={
         r"/verify": {
             "origins": [
-                "https://chemist2door.co.uk",
-                "https://verify.chemist2door.co.uk"
+                "https://chemist2door.co.uk"
             ]
         }
     }
@@ -69,10 +68,13 @@ CORS(
 
 @app.after_request
 def security_headers(response):
+
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "strict-origin"
+
     response.headers["Permissions-Policy"] = "camera=(self)"
+
     return response
 
 
@@ -110,15 +112,8 @@ AUDIT_FILE = "audit_log.json"
 # ADMIN AUTH
 # =================================================
 
-ADMIN_USER = os.environ.get(
-    "ADMIN_USER",
-    "chemist2door"
-)
-
-ADMIN_PASSWORD_HASH = os.environ.get(
-    "ADMIN_PASSWORD_HASH",
-    ""
-)
+ADMIN_USER = os.environ.get("ADMIN_USER", "chemist2door")
+ADMIN_PASSWORD_HASH = os.environ.get("ADMIN_PASSWORD_HASH", "")
 
 
 # =================================================
@@ -128,7 +123,6 @@ ADMIN_PASSWORD_HASH = os.environ.get(
 def load_json_file(path, default):
     if not os.path.exists(path):
         return default
-
     try:
         with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
@@ -146,21 +140,16 @@ def save_json_file(path, data):
 # =================================================
 
 def cleanup_audit_logs(logs):
-    cutoff = datetime.now(timezone.utc) - timedelta(
-        days=GDPR_CONFIG["retention_days"]
-    )
+
+    cutoff = datetime.now(timezone.utc) - timedelta(days=GDPR_CONFIG["retention_days"])
 
     cleaned = []
 
     for item in logs:
         try:
-            timestamp = datetime.fromisoformat(
-                item["timestamp"].replace("Z", "+00:00")
-            )
-
+            timestamp = datetime.fromisoformat(item["timestamp"].replace("Z", "+00:00"))
             if timestamp >= cutoff:
                 cleaned.append(item)
-
         except Exception:
             continue
 
@@ -168,6 +157,7 @@ def cleanup_audit_logs(logs):
 
 
 def add_audit_log(verification_id, result, reason):
+
     logs = load_json_file(AUDIT_FILE, [])
     logs = cleanup_audit_logs(logs)
 
@@ -182,9 +172,11 @@ def add_audit_log(verification_id, result, reason):
 
 
 def get_audit_logs():
+
     logs = load_json_file(AUDIT_FILE, [])
     logs = cleanup_audit_logs(logs)
     save_json_file(AUDIT_FILE, logs)
+
     return logs
 
 
@@ -193,6 +185,7 @@ def get_audit_logs():
 # =================================================
 
 def decode_image_base64(data):
+
     try:
         if not data:
             return None
@@ -203,15 +196,15 @@ def decode_image_base64(data):
         raw = base64.b64decode(data, validate=True)
 
         if len(raw) > GDPR_CONFIG["max_image_size"]:
-            logger.warning("Image too large")
             return None
 
         np_arr = np.frombuffer(raw, np.uint8)
         img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
         if img is None:
-            logger.warning("OpenCV could not decode image")
             return None
+
+        img = cv2.resize(img, (500, 500))
 
         return img
 
@@ -225,6 +218,7 @@ def decode_image_base64(data):
 # =================================================
 
 def extract_embedding(result):
+
     try:
         if not result:
             return None
@@ -241,11 +235,12 @@ def extract_embedding(result):
 
 
 def get_embedding(image, strict=True):
+
     try:
         result = DeepFace.represent(
             img_path=image,
             model_name="Facenet512",
-            detector_backend="opencv",
+            detector_backend="retinaface",
             enforce_detection=strict,
             align=True
         )
@@ -262,16 +257,15 @@ def get_embedding(image, strict=True):
 # =================================================
 
 def basic_liveness_score(selfie_img):
+
     try:
         gray = cv2.cvtColor(selfie_img, cv2.COLOR_BGR2GRAY)
         blur_score = cv2.Laplacian(gray, cv2.CV_64F).var()
 
         if blur_score < 50:
             return 0.25
-
         if blur_score < 150:
             return 0.50
-
         if blur_score < 300:
             return 0.75
 
@@ -286,17 +280,13 @@ def basic_liveness_score(selfie_img):
 # =================================================
 
 def compare_faces(selfie_embedding, id_embedding):
+
     try:
-        selfie_norm = np.linalg.norm(selfie_embedding)
-        id_norm = np.linalg.norm(id_embedding)
-
-        if selfie_norm == 0 or id_norm == 0:
-            return 0.0
-
-        selfie_embedding = selfie_embedding / selfie_norm
-        id_embedding = id_embedding / id_norm
+        selfie_embedding = selfie_embedding / np.linalg.norm(selfie_embedding)
+        id_embedding = id_embedding / np.linalg.norm(id_embedding)
 
         similarity = float(np.dot(selfie_embedding, id_embedding))
+
         return similarity
 
     except Exception:
@@ -308,17 +298,10 @@ def compare_faces(selfie_embedding, id_embedding):
 # =================================================
 
 def verification_audit(verification_id, status, reason):
-    add_audit_log(
-        verification_id,
-        status,
-        reason
-    )
 
-    logger.info(
-        "Verification %s : %s",
-        verification_id,
-        reason
-    )
+    add_audit_log(verification_id, status, reason)
+
+    logger.info("Verification %s : %s", verification_id, reason)
 
 
 # =================================================
@@ -340,6 +323,7 @@ def login_admin_redirect():
 
 @app.route("/admin/login", methods=["GET", "POST"])
 def admin_login():
+
     if request.method == "GET":
         return render_template("admin_login.html")
 
@@ -355,25 +339,19 @@ def admin_login():
         session["is_admin"] = True
         return redirect(url_for("stats"))
 
-    return render_template(
-        "admin_login.html",
-        error="Invalid credentials"
-    )
+    return render_template("admin_login.html", error="Invalid credentials")
 
 
 @app.route("/stats")
 def stats():
+
     if not is_admin():
         return redirect(url_for("admin_login"))
 
     stats_data = load_json_file(STATS_FILE, {})
     logs = get_audit_logs()
 
-    return render_template(
-        "stats.html",
-        stats=stats_data,
-        logs=logs
-    )
+    return render_template("stats.html", stats=stats_data, logs=logs)
 
 
 # =================================================
@@ -381,7 +359,9 @@ def stats():
 # =================================================
 
 def update_stats(result):
+
     today = datetime.now(timezone.utc).date().isoformat()
+
     stats = load_json_file(STATS_FILE, {})
 
     if today not in stats:
@@ -407,6 +387,7 @@ def update_stats(result):
 
 @app.route("/verify", methods=["POST"])
 def verify():
+
     verification_id = str(uuid4())
 
     try:
@@ -416,12 +397,9 @@ def verify():
         id_image = decode_image_base64(data.get("id_image"))
 
         if selfie is None or id_image is None:
+
             update_stats(False)
-            verification_audit(
-                verification_id,
-                False,
-                "invalid_images"
-            )
+            verification_audit(verification_id, False, "invalid_images")
 
             return jsonify({
                 "status": False,
@@ -431,12 +409,9 @@ def verify():
         live_score = basic_liveness_score(selfie)
 
         if live_score < 0.50:
+
             update_stats(False)
-            verification_audit(
-                verification_id,
-                False,
-                "liveness_failed"
-            )
+            verification_audit(verification_id, False, "liveness_failed")
 
             return jsonify({
                 "status": False,
@@ -447,12 +422,9 @@ def verify():
         id_embedding = get_embedding(id_image)
 
         if selfie_embedding is None or id_embedding is None:
+
             update_stats(False)
-            verification_audit(
-                verification_id,
-                False,
-                "face_not_detected"
-            )
+            verification_audit(verification_id, False, "face_not_detected")
 
             return jsonify({
                 "status": False,
@@ -461,31 +433,18 @@ def verify():
 
         similarity = compare_faces(selfie_embedding, id_embedding)
 
-        logger.info(
-            "Verification %s similarity score: %.4f",
-            verification_id,
-            similarity
-        )
-
         if similarity >= 0.55:
+
             update_stats(True)
-            verification_audit(
-                verification_id,
-                True,
-                "verified"
-            )
+            verification_audit(verification_id, True, "verified")
 
             return jsonify({
                 "status": True,
-                "redirect": "/"
+                "redirect": "https://chemist2door.co.uk/"
             }), 200
 
         update_stats(False)
-        verification_audit(
-            verification_id,
-            False,
-            "face_mismatch"
-        )
+        verification_audit(verification_id, False, "face_mismatch")
 
         return jsonify({
             "status": False,
@@ -493,14 +452,11 @@ def verify():
         }), 200
 
     except Exception as e:
-        logger.exception("Verification error: %s", e)
+
+        logger.exception("Verification error")
 
         update_stats(False)
-        verification_audit(
-            verification_id,
-            False,
-            "server_error"
-        )
+        verification_audit(verification_id, False, "server_error")
 
         return jsonify({
             "status": False,
