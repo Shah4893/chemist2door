@@ -415,76 +415,155 @@ def verify():
     try:
         data = request.get_json(silent=True) or {}
 
+        logger.info(
+            "SELFIE RECEIVED: %s",
+            bool(data.get("selfie"))
+        )
+
+        logger.info(
+            "ID RECEIVED: %s",
+            bool(data.get("id_image"))
+        )
+
+        logger.info(
+            "SELFIE SIZE: %s",
+            len(data.get("selfie", ""))
+        )
+
+        logger.info(
+            "ID SIZE: %s",
+            len(data.get("id_image", ""))
+        )
+
         selfie = decode_image_base64(data.get("selfie"))
         id_image = decode_image_base64(data.get("id_image"))
 
         if selfie is None or id_image is None:
 
+            logger.warning("Image decoding failed")
+
             update_stats(False)
-            verification_audit(verification_id, False, "invalid_images")
+            verification_audit(
+                verification_id,
+                False,
+                "invalid_images"
+            )
 
             return jsonify({
                 "status": False,
                 "message": "Invalid images"
             }), 400
 
+
         live_score = basic_liveness_score(selfie)
+
+        logger.info(
+            "Liveness score: %s",
+            live_score
+        )
 
         if live_score < 0.50:
 
             update_stats(False)
-            verification_audit(verification_id, False, "liveness_failed")
+            verification_audit(
+                verification_id,
+                False,
+                "liveness_failed"
+            )
 
             return jsonify({
                 "status": False,
                 "message": "Liveness failed"
             }), 422
 
+
+        logger.info("Extracting selfie face")
+
         selfie_embedding = get_embedding(selfie)
+
+
+        logger.info("Extracting ID face")
+
         id_embedding = get_embedding(id_image)
+
 
         if selfie_embedding is None or id_embedding is None:
 
             update_stats(False)
-            verification_audit(verification_id, False, "face_not_detected")
+            verification_audit(
+                verification_id,
+                False,
+                "face_not_detected"
+            )
 
             return jsonify({
                 "status": False,
                 "message": "Face not detected"
             }), 422
 
-        similarity = compare_faces(selfie_embedding, id_embedding)
+
+        similarity = compare_faces(
+            selfie_embedding,
+            id_embedding
+        )
+
+
+        logger.info(
+            "Face similarity: %s",
+            similarity
+        )
+
 
         if similarity >= 0.55:
 
             update_stats(True)
-            verification_audit(verification_id, True, "verified")
+
+            verification_audit(
+                verification_id,
+                True,
+                "verified"
+            )
 
             return jsonify({
                 "status": True,
+                "message": "Verification successful",
                 "redirect": "https://chemist2door.co.uk/"
             }), 200
 
+
         update_stats(False)
-        verification_audit(verification_id, False, "face_mismatch")
+
+        verification_audit(
+            verification_id,
+            False,
+            "face_mismatch"
+        )
 
         return jsonify({
             "status": False,
             "message": "Face mismatch"
         }), 200
 
+
     except Exception as e:
 
-        logger.exception("Verification error")
+        logger.exception(
+            "Verification error: %s",
+            e
+        )
 
         update_stats(False)
-        verification_audit(verification_id, False, "server_error")
+
+        verification_audit(
+            verification_id,
+            False,
+            "server_error"
+        )
 
         return jsonify({
             "status": False,
             "message": "Server error"
         }), 500
-
 
 # =================================================
 # START SERVER
