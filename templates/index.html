@@ -1,259 +1,262 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <title>Chemist2Door – Secure Verification</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link rel="stylesheet" href="/static/style.css?v=1001">
-    <meta http-equiv="Cache-Control" content="no-store" />
+<meta charset="UTF-8">
+<title>Chemist2Door Secure Age Verification</title>
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f7fa;
-            margin: 0;
-            padding: 0;
-        }
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        .container {
-            width: 95%;
-            max-width: 1100px;
-            margin: auto;
-            padding-top: 20px;
-        }
+<meta http-equiv="Cache-Control" content="no-store">
 
-        .main-title {
-            text-align: center;
-            font-size: 32px;
-            margin-bottom: 5px;
-        }
+<link rel="stylesheet" href="/static/style.css">
 
-        .subtitle {
-            text-align: center;
-            color: #555;
-            margin-bottom: 25px;
-        }
 
-        .row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            justify-content: center;
-        }
+<style>
 
-        .card {
-            background: #fff;
-            padding: 20px;
-            width: 480px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px #ccc;
-        }
+body {
+    font-family: Arial, sans-serif;
+    background:#f4f7fa;
+    margin:0;
+}
 
-        .video-wrapper {
-            position: relative;
-            width: 100%;
-            height: auto;
-        }
 
-        #video {
-            width: 100%;
-            border-radius: 10px;
-        }
+.container {
 
-        #faceOval {
-            position: absolute;
-            top: 20%;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 60%;
-            height: 50%;
-            border: 3px solid #ff0000;
-            border-radius: 50%;
-            pointer-events: none;
-        }
+    max-width:1100px;
+    width:95%;
+    margin:auto;
+    padding:20px;
 
-        #selfieCanvas {
-            display: none;
-            width: 100%;
-            border-radius: 10px;
-        }
+}
 
-        .primary-btn {
-            width: 100%;
-            padding: 12px;
-            background: #0077cc;
-            color: #fff;
-            border: none;
-            border-radius: 6px;
-            margin-top: 15px;
-            cursor: pointer;
-            font-size: 16px;
-        }
 
-        .primary-btn.disabled {
-            background: #999;
-            cursor: not-allowed;
-        }
+h1 {
 
-        .upload-box {
-            text-align: center;
-            margin-bottom: 10px;
-        }
+    text-align:center;
 
-        #idPreview {
-            display: none;
-            width: 100%;
-            margin-top: 10px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px #ccc;
-        }
+}
 
-        #resultBox {
-            margin-top: 20px;
-            background: #fff;
-            padding: 15px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px #ccc;
-            text-align: center;
-        }
 
-        #resultText {
-            font-size: 18px;
-            font-weight: bold;
-        }
-    </style>
+.row {
+
+    display:flex;
+    flex-wrap:wrap;
+    gap:20px;
+    justify-content:center;
+
+}
+
+
+.card {
+
+    background:white;
+    width:450px;
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0 0 12px #ccc;
+
+}
+
+
+video,
+canvas,
+img {
+
+    width:100%;
+    border-radius:10px;
+
+}
+
+
+canvas {
+
+    display:none;
+
+}
+
+
+button {
+
+    width:100%;
+    padding:14px;
+    margin-top:15px;
+    border:none;
+    border-radius:8px;
+    background:#0077cc;
+    color:white;
+    font-size:16px;
+    cursor:pointer;
+
+}
+
+
+button:disabled {
+
+    background:#999;
+    cursor:not-allowed;
+
+}
+
+
+#resultBox {
+
+    background:white;
+    padding:15px;
+    margin-top:20px;
+    text-align:center;
+    border-radius:10px;
+
+}
+
+
+#faceOval {
+
+    position:absolute;
+    top:20%;
+    left:50%;
+    transform:translateX(-50%);
+    width:60%;
+    height:50%;
+    border:3px solid red;
+    border-radius:50%;
+
+}
+
+
+.video-wrapper {
+
+    position:relative;
+
+}
+
+
+</style>
+
 </head>
+
 
 <body>
 
+
 <div class="container">
 
-    <h1 class="main-title">Chemist2Door Secure Verify</h1>
-    <p class="subtitle">Selfie + ID biometric verification</p>
 
-    <div class="row">
+<h1>
+Chemist2Door Secure Age Verification
+</h1>
 
-        <!-- SELFIE SECTION -->
-        <div class="card">
-            <h2>Selfie Capture</h2>
 
-            <div class="video-wrapper">
-                <video id="video" autoplay playsinline></video>
-                <div id="faceOval"></div>
-            </div>
+<p style="text-align:center">
+Selfie + ID verification
+</p>
 
-            <canvas id="selfieCanvas"></canvas>
 
-            <button id="captureBtn" class="primary-btn">Capture Selfie</button>
-        </div>
 
-        <!-- ID SECTION -->
-        <div class="card">
-            <h2>ID Document</h2>
+<div class="row">
 
-            <div class="upload-box">
-                <input type="file" id="idInput" accept="image/*">
-                <label for="idInput" class="primary-btn">Browse ID Image</label>
-                <p id="idFileName">No file selected</p>
-            </div>
 
-            <img id="idPreview" alt="ID Preview">
-        </div>
+<div class="card">
 
-    </div>
 
-    <button id="verifyBtn" class="primary-btn disabled" disabled>Start Verification</button>
+<h2>Selfie Capture</h2>
 
-    <div id="resultBox">
-        <p id="resultText">Waiting for verification...</p>
-    </div>
+
+<div class="video-wrapper">
+
+<video 
+id="video"
+autoplay
+playsinline>
+</video>
+
+
+<div id="faceOval"></div>
+
 
 </div>
 
-<script>
-let selfieBase64 = null;
-let idBase64 = null;
 
-/* CAMERA INIT */
-navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
-    document.getElementById("video").srcObject = stream;
-});
 
-/* CAPTURE SELFIE */
-document.getElementById("captureBtn").onclick = () => {
-    const video = document.getElementById("video");
-    const canvas = document.getElementById("selfieCanvas");
-    const ctx = canvas.getContext("2d");
+<canvas id="selfieCanvas"></canvas>
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
 
-    ctx.drawImage(video, 0, 0);
 
-    selfieBase64 = canvas.toDataURL("image/jpeg");
+<button id="captureBtn">
+Capture Selfie
+</button>
 
-    document.getElementById("video").style.display = "none";
-    canvas.style.display = "block";
 
-    document.getElementById("captureBtn").textContent = "Captured";
-    document.getElementById("captureBtn").disabled = true;
+</div>
 
-    checkReady();
-};
 
-/* ID UPLOAD */
-document.getElementById("idInput").onchange = function () {
-    const file = this.files[0];
-    if (!file) return;
 
-    document.getElementById("idFileName").innerText = file.name;
 
-    const reader = new FileReader();
-    reader.onload = function (e) {
-        idBase64 = e.target.result;
-        const preview = document.getElementById("idPreview");
-        preview.src = idBase64;
-        preview.style.display = "block";
-        checkReady();
-    };
-    reader.readAsDataURL(file);
-};
+<div class="card">
 
-/* ENABLE VERIFY BUTTON */
-function checkReady() {
-    const btn = document.getElementById("verifyBtn");
-    if (selfieBase64 && idBase64) {
-        btn.disabled = false;
-        btn.classList.remove("disabled");
-    }
-}
 
-/* VERIFY API CALL */
-document.getElementById("verifyBtn").onclick = () => {
-    document.getElementById("resultText").innerText = "Processing...";
+<h2>ID Document</h2>
 
-    fetch("/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            selfie: selfieBase64,
-            id_image: idBase64
-        })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.status === true) {
-            document.getElementById("resultText").innerText = "✔ Verified Successfully!";
-        } else {
-            document.getElementById("resultText").innerText = "❌ Verification Failed";
-        }
-    })
-    .catch(() => {
-        document.getElementById("resultText").innerText = "❌ Server Error";
-    });
-};
-</script>
+
+<input 
+type="file"
+id="idInput"
+accept="image/*">
+
+
+
+<p id="idFileName">
+No file selected
+</p>
+
+
+
+<img 
+id="idPreview"
+style="display:none;">
+
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+<button 
+id="verifyBtn"
+disabled>
+
+Start Verification
+
+</button>
+
+
+
+
+<div id="resultBox">
+
+<p id="resultText">
+Waiting...
+</p>
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+<script src="/static/app.js"></script>
+
 
 </body>
+
 </html>
