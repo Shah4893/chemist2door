@@ -210,3 +210,8 @@ button[disabled],
         height: 300px;
     }
 }
+#verifyBtn:not([disabled]) {
+    opacity: 1 !important;
+    cursor: pointer !important;
+    background: #12E6EF !important;
+}
